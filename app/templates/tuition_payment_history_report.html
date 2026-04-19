@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 14mm 14mm 14mm 14mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --section-gap: 14px;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #d1d5db;
+        --line-soft: #e5e7eb;
+        --panel: #f8fafc;
+        --panel-strong: #f3f4f6;
+        --header-fill: #eef2f7;
+        --row-alt: #fafafa;
+        --success: #16a34a;
+        --warning: #d97706;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #ffffff;
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .page {
+        width: 100%;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+      }
+
+      .date-box {
+        min-width: 176px;
+        text-align: right;
+      }
+
+      .date-label {
+        margin: 0;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .date-value {
+        margin: 6px 0 0;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .title-block {
+        padding: 16px 0 12px;
+      }
+
+      .report-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.08;
+      }
+
+      .report-subtitle {
+        margin: 7px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .summary-card {
+        background: linear-gradient(180deg, #ffffff 0%, var(--panel) 100%);
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        padding: 14px 16px;
+      }
+
+      .summary-label {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+      }
+
+      .summary-value {
+        margin-top: 8px;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .summary-value.success {
+        color: var(--success);
+      }
+
+      .summary-value.warning {
+        color: var(--warning);
+      }
+
+      .meta-panel {
+        margin-top: var(--section-gap);
+        padding: 13px 16px;
+        background: var(--panel-strong);
+        border-radius: 10px;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .meta-item {
+        min-width: 0;
+      }
+
+      .meta-item-label {
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .meta-item-value {
+        margin-top: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .table-wrap {
+        margin-top: var(--section-gap);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 9px 8px;
+        vertical-align: middle;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      th {
+        background: var(--header-fill);
+        color: #374151;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.2;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      tbody tr:nth-child(even) {
+        background: var(--row-alt);
+      }
+
+      tbody td {
+        font-size: 11px;
+        line-height: 1.28;
+      }
+
+      .text-left {
+        text-align: left;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+
+      .status-pill {
+        display: inline-block;
+        min-width: 98px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        background: #ecfdf5;
+        color: #047857;
+      }
+
+      .status-pill.partial {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
+      .empty-state {
+        margin-top: 18px;
+        padding: 26px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        text-align: center;
+        color: var(--muted);
+        background: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div>
+          <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+          <p class="brand-subtitle">Palee Elite Training Center</p>
+        </div>
+        <div class="date-box">
+          <p class="date-label">ວັນທີພິມ</p>
+          <p class="date-value">{{ generated_at }}</p>
+        </div>
+      </div>
+
+      <div class="title-block">
+        <h1 class="report-title">ສະຫຼຸບປະຫວັດການຈ່າຍຄ່າຮຽນ</h1>
+        <p class="report-subtitle">
+          ສະແດງງວດທີ່ຈ່າຍ, ຈຳນວນທີ່ຈ່າຍ, ຍອດສະສົມ ແລະ ຍອດຄົງເຫຼືອ
+        </p>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">ຈຳນວນງວດທີ່ຈ່າຍ</div>
+          <div class="summary-value">{{ installment_count }} ງວດ</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ຍອດຄ່າຮຽນທັງໝົດ</div>
+          <div class="summary-value">{{ total_fee }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ຈ່າຍແລ້ວສະສົມ</div>
+          <div class="summary-value success">{{ total_paid_amount }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ຍັງຄົງເຫຼືອ</div>
+          <div class="summary-value warning">{{ remaining_amount }}</div>
+        </div>
+      </div>
+
+      <div class="meta-panel">
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="meta-item-label">ລະຫັດລົງທະບຽນ</div>
+            <div class="meta-item-value">{{ registration_id }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-item-label">ລະຫັດນັກຮຽນ</div>
+            <div class="meta-item-value">{{ student_id }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-item-label">ຊື່ນັກຮຽນ</div>
+            <div class="meta-item-value">{{ student_name }}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-item-label">ວັນທີລົງທະບຽນ</div>
+            <div class="meta-item-value">{{ registration_date }}</div>
+          </div>
+        </div>
+      </div>
+
+      {% if payment_items %}
+      <div class="table-wrap">
+        <table>
+          <colgroup>
+            <col style="width: 7%" />
+            <col style="width: 12%" />
+            <col style="width: 16%" />
+            <col style="width: 12%" />
+            <col style="width: 14%" />
+            <col style="width: 15%" />
+            <col style="width: 14%" />
+            <col style="width: 10%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>ງວດ</th>
+              <th>ລະຫັດການຈ່າຍ</th>
+              <th>ວັນທີຈ່າຍ</th>
+              <th>ວິທີການຈ່າຍ</th>
+              <th>ຍອດຈ່າຍ</th>
+              <th>ຍອດຈ່າຍສະສົມ</th>
+              <th>ຍອດຄົງເຫຼືອ</th>
+              <th>ສະຖານະ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in payment_items %}
+            <tr>
+              <td class="text-center">{{ item.installment_index }}</td>
+              <td class="text-center">{{ item.invoice_id }}</td>
+              <td class="text-center">{{ item.pay_date }}</td>
+              <td class="text-center">{{ item.payment_method }}</td>
+              <td class="text-center">{{ item.paid_amount }}</td>
+              <td class="text-center">{{ item.cumulative_paid_amount }}</td>
+              <td class="text-center">{{ item.remaining_amount }}</td>
+              <td class="text-center">
+                <span
+                  class="status-pill{% if item.status != 'ຈ່າຍແລ້ວ' %} partial{% endif %}"
+                >
+                  {{ item.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        ຍັງບໍ່ມີປະຫວັດການຈ່າຍຄ່າຮຽນສຳລັບນັກຮຽນຄົນນີ້
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>

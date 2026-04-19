@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 portrait;
+        margin: 10mm 12mm 10mm 12mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #dbe4ee;
+        --panel: #f8fafc;
+        --accent: #0f766e;
+        --surface: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .page-shell {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        background: var(--surface);
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 14px;
+      }
+
+      .brand-title,
+      .report-title {
+        margin: 0;
+        font-weight: 700;
+      }
+
+      .brand-title {
+        font-size: 18px;
+      }
+
+      .brand-subtitle,
+      .meta-label,
+      .section-caption {
+        color: var(--muted);
+      }
+
+      .brand-subtitle,
+      .meta-label {
+        margin: 4px 0 0;
+        font-size: 11px;
+      }
+
+      .meta-value {
+        margin: 6px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: right;
+      }
+
+      .title-block {
+        padding: 16px 0 12px;
+      }
+
+      .report-title {
+        font-size: 22px;
+        color: var(--accent);
+      }
+
+      .report-subtitle {
+        margin: 6px 0 0;
+        font-size: 13px;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .meta-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: linear-gradient(180deg, #ffffff 0%, var(--panel) 100%);
+      }
+
+      .meta-card-title {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .meta-card-value {
+        margin-top: 8px;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .table-title {
+        margin: 0;
+        padding: 12px 12px 12px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .section-caption {
+        margin: 4px 0 0;
+        padding: 0 12px 12px;
+        font-size: 11px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .col-index {
+        width: 10%;
+      }
+
+      .col-student-id {
+        width: 14%;
+      }
+
+      .col-first-name {
+        width: 20%;
+      }
+
+      .col-last-name {
+        width: 22%;
+      }
+
+      .col-school {
+        width: 34%;
+      }
+
+      th,
+      td {
+        padding: 9px 10px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+        word-break: break-word;
+      }
+
+      th {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: left;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      tbody tr:nth-child(even) {
+        background: #f8fafc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div>
+        <h1 class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</h1>
+        <p class="brand-subtitle">Palee Elite Training Center</p>
+      </div>
+      <div>
+        <p class="meta-label">ວັນທີສ້າງ</p>
+        <p class="meta-value">{{ generated_at }}</p>
+      </div>
+    </div>
+
+    <div class="title-block">
+      <h2 class="report-title">{{ title }}</h2>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-card">
+        <div class="meta-card-title">ໝວດວິຊາ</div>
+        <div class="meta-card-value">{{ subject_category }}</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-card-title">ສົກຮຽນ</div>
+        <div class="meta-card-value">{{ academic_year_name }}</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-card-title">ຈຳນວນນັກຮຽນ</div>
+        <div class="meta-card-value">{{ total_students }}</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 class="table-title">ລາຍຊື່ນັກຮຽນ</h3>
+      <table>
+        <colgroup>
+          <col class="col-index" />
+          <col class="col-student-id" />
+          <col class="col-first-name" />
+          <col class="col-last-name" />
+          <col class="col-school" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="text-center">ລຳດັບ</th>
+            <th>ລະຫັດ</th>
+            <th>ຊື່</th>
+            <th>ນາມສະກຸນ</th>
+            <th>ມາຈາກໂຮງຮຽນ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr>
+            <td class="text-center">{{ loop.index }}</td>
+            <td>{{ student.student_id }}</td>
+            <td>{{ student.student_name }}</td>
+            <td>{{ student.student_lastname }}</td>
+            <td>{{ student.school }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

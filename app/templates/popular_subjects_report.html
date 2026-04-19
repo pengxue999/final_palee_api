@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 10mm 12mm 10mm 12mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #dbe4ee;
+        --panel: #f8fafc;
+        --accent: #0f766e;
+        --accent-strong: #2563eb;
+        --accent-soft: #dbeafe;
+        --surface: #ffffff;
+        --surface-alt: #f8fafc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .page-section {
+        page-break-after: always;
+      }
+      .page-section:last-of-type {
+        page-break-after: auto;
+      }
+
+      .page-shell {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+        padding: 10px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .brand-subtitle,
+      .date-label,
+      .report-subtitle,
+      .section-caption {
+        color: var(--muted);
+      }
+
+      .brand-subtitle,
+      .date-label {
+        margin: 4px 0 0;
+        font-size: 11px;
+      }
+
+      .date-label,
+      .date-value {
+        text-align: right;
+      }
+
+      .date-value {
+        margin: 6px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .title-block {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        padding: 14px 0 10px;
+      }
+
+      .report-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .report-subtitle {
+        margin: 6px 0 0;
+      }
+
+      .report-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .meta-pill,
+      .chip {
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .meta-pill {
+        padding: 7px 12px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        color: var(--accent);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff 0%, var(--panel) 100%);
+      }
+
+      .summary-label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .summary-value {
+        margin-top: 8px;
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      .filter-panel {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip {
+        padding: 6px 12px;
+        border: 1px solid #b7ece2;
+        background: #ffffff;
+        color: var(--accent);
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .stack-layout {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .panel-body {
+        padding: 12px 14px;
+      }
+      .panel-title,
+      .table-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .chart-panel {
+        min-height: 250px;
+      }
+      .chart-svg {
+        display: block;
+        width: 100%;
+        height: 220px;
+      }
+
+      .pie-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        margin-top: 8px;
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .legend-dot {
+        width: 10px;
+        height: 10px;
+        flex: 0 0 auto;
+      }
+
+      .bar-chart-wrap {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 10px;
+        min-height: 220px;
+      }
+
+      .y-axis {
+        display: grid;
+        grid-template-rows: repeat(6, 1fr);
+        align-items: start;
+        padding-top: 6px;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .bar-area {
+        min-height: 220px;
+        padding: 10px 12px 28px;
+        background-image: linear-gradient(to top, #e2e8f0 1px, transparent 1px);
+        background-size: 100% calc(100% / 6);
+      }
+
+      .rank-row {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        gap: 10px;
+        align-items: start;
+        padding: 10px 0;
+        border-bottom: 1px solid #edf2f7;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .rank-row:last-child {
+        border-bottom: none;
+      }
+
+      .rank-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 17px;
+        background: var(--accent-strong);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+      }
+
+      .rank-progress {
+        margin-top: 8px;
+        width: 100%;
+        height: 8px;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .rank-progress::-webkit-progress-bar {
+        background: #e2e8f0;
+        border-radius: 999px;
+      }
+
+      .rank-progress::-webkit-progress-value,
+      .rank-progress::-moz-progress-bar {
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+        border-radius: 999px;
+      }
+
+      .category-tag {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+        word-break: break-word;
+      }
+
+      th {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      tbody tr:nth-child(even) {
+        background: var(--surface-alt);
+      }
+      .text-right {
+        text-align: right;
+      }
+      .table-title {
+        padding: 12px 14px 0;
+      }
+      .section-caption {
+        margin: 2px 0 0;
+        padding: 0 14px 12px;
+        font-size: 11px;
+      }
+      .detail-table-wrap {
+        padding: 0 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="page-section">
+      <div class="topbar">
+        <div>
+          <h1 class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</h1>
+          <p class="brand-subtitle">Palee Elite Training Center</p>
+        </div>
+        <div>
+          <p class="date-label">ວັນທີສ້າງ</p>
+          <p class="date-value">{{ generated_at }}</p>
+        </div>
+      </div>
+
+      <div class="title-block">
+        <div>
+          <h2 class="report-title">ລາຍງານວິຊາຍອດນິຍົມ</h2>
+          <p class="report-subtitle">
+            ສະຫຼຸບຂໍ້ມູນວິຊາທີ່ນັກຮຽນເລືອກຮຽນຫຼາຍທີ່ສຸດ
+          </p>
+        </div>
+        <div class="report-meta">
+          {% if filter_items %}
+          <div class="meta-pill">{{ filter_items[0] }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">ນັກຮຽນລວມ</div>
+          <div class="summary-value">{{ summary.total_students }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ວິຊາທັງໝົດ</div>
+          <div class="summary-value">{{ summary.total_subjects }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ໝວດວິຊາ</div>
+          <div class="summary-value">{{ summary.total_categories }}</div>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <div class="panel chart-panel">
+          <div class="panel-body">
+            <h3 class="panel-title">ສັດສ່ວນນັກຮຽນຕາມວິຊາ</h3>
+            <svg
+              class="chart-svg"
+              viewBox="0 0 420 240"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-label="Popular subjects pie chart"
+            >
+              <g transform="translate(60, 0)">
+                {% for segment in pie_segments %}
+                <path d="{{ segment.path }}" fill="{{ segment.color }}"></path>
+                <text
+                  x="{{ segment.label_x }}"
+                  y="{{ segment.label_y }}"
+                  text-anchor="middle"
+                  dominant-baseline="middle"
+                  fill="#ffffff"
+                  font-size="13"
+                  font-weight="700"
+                >
+                  {{ segment.percentage_display }}
+                </text>
+                {% endfor %}
+              </g>
+            </svg>
+            <div class="pie-legend">
+              {% for item in subjects %}
+              <div class="legend-item">
+                <svg
+                  class="legend-dot"
+                  viewBox="0 0 10 10"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <circle cx="5" cy="5" r="5" fill="{{ item.color }}"></circle>
+                </svg>
+                <span
+                  >{{ item.subject_name }} ({{ item.student_count_display
+                  }})</span
+                >
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="panel chart-panel">
+          <div class="panel-body">
+            <h3 class="panel-title">ສະຖິຕິຕາມໝວດວິຊາ</h3>
+            <div class="bar-chart-wrap">
+              <div class="y-axis">
+                {% for tick in y_axis_labels %}
+                <div>{{ tick.label }}</div>
+                {% endfor %}
+              </div>
+              <div class="bar-area">
+                <svg
+                  class="chart-svg"
+                  viewBox="0 0 240 220"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-label="Category bar chart"
+                >
+                  {% for item in category_chart_svg_items %}
+                  <text
+                    x="{{ item.label_x }}"
+                    y="{{ item.y - 8 }}"
+                    text-anchor="middle"
+                    fill="#64748b"
+                    font-size="11"
+                  >
+                    {{ item.count }}
+                  </text>
+                  <rect
+                    x="{{ item.x }}"
+                    y="{{ item.y }}"
+                    width="{{ item.width }}"
+                    height="{{ item.height }}"
+                    rx="8"
+                    ry="8"
+                    fill="#3b82f6"
+                  ></rect>
+                  <text
+                    x="{{ item.label_x }}"
+                    y="208"
+                    text-anchor="middle"
+                    fill="#111827"
+                    font-size="10"
+                    font-weight="700"
+                  >
+                    {{ item.name }}
+                  </text>
+                  {% endfor %}
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="title-block">
+        <div>
+          <h2 class="report-title">ວິຊານິຍົມອັນດັບສູງສຸດ</h2>
+          <p class="report-subtitle">
+            ສະແດງ top 5 ວິຊາທີ່ມີນັກຮຽນເລືອກຮຽນສູງທີ່ສຸດ
+          </p>
+        </div>
+      </div>
+
+      <div class="stack-layout">
+        <div class="panel">
+          <div class="panel-body">
+            <h3 class="panel-title">ວິຊານິຍົມອັນດັບສູງສຸດ</h3>
+            {% for item in subjects %}
+            <div class="rank-row">
+              <div class="rank-badge">{{ item.rank }}</div>
+              <div>
+                <div><strong>{{ item.subject_name }}</strong></div>
+                <div class="category-tag">{{ item.subject_category }}</div>
+                <progress
+                  class="rank-progress"
+                  max="100"
+                  value="{{ item.progress_width }}"
+                ></progress>
+              </div>
+              <div class="text-right">
+                <div><strong>{{ item.student_count_display }}</strong></div>
+                <div>{{ item.percentage_display }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="title-block">
+        <div>
+          <h2 class="report-title">ລາຍລະອຽດຕາມລະດັບ/ຊັ້ນ</h2>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 class="table-title">ຕາຕະລາງລາຍລະອຽດ</h3>
+        <p class="section-caption">ຮຽງລຳດັບຕາມຈຳນວນນັກຮຽນຈາກຫຼາຍໄປໜ້ອຍ</p>
+        <div class="detail-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 10%">ລຳດັບ</th>
+                <th style="width: 30%">ວິຊາ</th>
+                <th style="width: 24%">ໝວດ</th>
+                <th style="width: 24%">ລະດັບ/ຊັ້ນ</th>
+                <th style="width: 12%">ນັກຮຽນ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in levels %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ item.subject_name }}</td>
+                <td>{{ item.subject_category }}</td>
+                <td>{{ item.level_name }}</td>
+                <td class="text-right">{{ item.student_count }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

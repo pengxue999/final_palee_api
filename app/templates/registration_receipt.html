@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A5;
+        margin: 0;
+      }
+
+      @font-face {
+        font-family: "ReceiptLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReceiptLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --text: #252525;
+        --muted: #8a8a8a;
+        --line: #e4e4e4;
+        --line-strong: #bdbdbd;
+        --success: #15803d;
+        --page-width: 148mm;
+        --page-height: 210mm;
+        --pad-x: 9.5mm;
+        --pad-top: 9.5mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: var(--page-width);
+        height: var(--page-height);
+        background: #ffffff;
+        color: var(--text);
+        font-family: "ReceiptLao", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+        overflow: hidden;
+      }
+
+      body {
+        padding: 0;
+      }
+
+      .page {
+        width: var(--page-width);
+        height: var(--page-height);
+        padding-top: var(--pad-top);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .header {
+        padding: 0 var(--pad-x);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .brand-title {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.15;
+        margin: 0;
+      }
+
+      .brand-subtitle {
+        margin: 7px 0 0;
+        font-size: 9px;
+        line-height: 1.1;
+        color: var(--muted);
+      }
+
+      .date-box {
+        text-align: right;
+        padding-top: 2px;
+      }
+
+      .date-label {
+        font-size: 9px;
+        line-height: 1.3;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .date-value {
+        font-size: 12px;
+        line-height: 1.2;
+        font-weight: 700;
+        margin: 6px 0 0;
+      }
+
+      .full-rule {
+        height: 1px;
+        background: var(--line);
+        margin: 12px 0 0;
+      }
+
+      .title {
+        margin: 28px 0 0;
+        text-align: center;
+        font-size: 20px;
+        line-height: 1.15;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+
+      .info {
+        padding: 24px var(--pad-x) 0;
+        display: grid;
+        gap: 7px;
+      }
+
+      .info-row {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        font-size: 12px;
+        line-height: 1.2;
+        min-width: 0;
+      }
+
+      .info-label {
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        flex: 0 0 auto;
+      }
+
+      .info-value {
+        font-weight: 700;
+        min-width: 0;
+        word-break: break-word;
+      }
+
+      .section-rule {
+        height: 1px;
+        background: var(--line);
+        margin: 16px 0 0;
+      }
+
+      .table-wrap {
+        padding: 16px var(--pad-x) 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      thead th {
+        padding: 0 0 10px;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 700;
+        text-align: left;
+        border-bottom: 1.5px solid var(--line);
+      }
+
+      thead th:nth-child(2) {
+        text-align: center;
+      }
+
+      thead th:nth-child(3) {
+        text-align: right;
+      }
+
+      tbody td {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      tbody td:nth-child(2) {
+        text-align: center;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      tbody td:nth-child(3) {
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .summary {
+        width: 260px;
+        margin: 18px var(--pad-x) 0 auto;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 12px;
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      .summary-row + .summary-row {
+        margin-top: 8px;
+      }
+
+      .summary-label {
+        color: var(--muted);
+        text-align: right;
+        flex: 1 1 auto;
+        line-height: 1.35;
+      }
+
+      .summary-value {
+        width: 118px;
+        text-align: right;
+        font-weight: 700;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .summary-row.discount .summary-label,
+      .summary-row.discount .summary-value {
+        color: var(--success);
+      }
+
+      .summary-divider {
+        border-top: 1.2px dashed var(--line-strong);
+        margin: 10px 0 9px;
+      }
+
+      .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .summary-total-label {
+        flex: 1 1 auto;
+        text-align: right;
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 700;
+      }
+
+      .summary-total-value {
+        width: 118px;
+        text-align: right;
+        font-size: 16px;
+        line-height: 1.2;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .footer {
+        position: absolute;
+        left: var(--pad-x);
+        right: var(--pad-x);
+        bottom: 13mm;
+      }
+
+      .footer-line {
+        position: relative;
+        border-top: 1.1px dashed var(--line);
+        height: 0;
+      }
+
+      .footer-line::before,
+      .footer-line::after {
+        content: "";
+        position: absolute;
+        top: -10px;
+        width: 20px;
+        height: 20px;
+        border: 1.2px solid var(--line-strong);
+        border-radius: 50%;
+        background: #ffffff;
+      }
+
+      .footer-line::before {
+        left: -10px;
+      }
+
+      .footer-line::after {
+        right: -10px;
+      }
+
+      .footer-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-top: 14px;
+      }
+
+      .footer-text {
+        color: var(--muted);
+      }
+
+      .footer-text p {
+        margin: 10px 0 0;
+      }
+
+      .footer-text p + p {
+        margin-top: 10px;
+      }
+
+      .footer-text .lo {
+        font-size: 10px;
+        line-height: 1.15;
+      }
+
+      .footer-text .en {
+        font-size: 9px;
+        line-height: 1.15;
+      }
+
+      .footer-id {
+        color: var(--muted);
+        font-size: 9px;
+        line-height: 1.2;
+        padding-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <div>
+          <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+          <p class="brand-subtitle">Palee Elite Training Center</p>
+        </div>
+        <div class="date-box">
+          <p class="date-label">ວັນທີ</p>
+          <p class="date-value">{{ registration_date }}</p>
+        </div>
+      </div>
+
+      <div class="full-rule"></div>
+
+      <div class="title">ໃບລົງທະບຽນ</div>
+
+      <div class="info">
+        <div class="info-row">
+          <span class="info-label">ລະຫັດໃບລົງທະບຽນ:</span>
+          <span class="info-value">{{ registration_id }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ຊື່ ແລະ ນາມສະກຸນ:</span>
+          <span class="info-value">{{ student_name }}</span>
+        </div>
+      </div>
+
+      <div class="section-rule"></div>
+
+      <div class="table-wrap">
+        <table>
+          <colgroup>
+            <col style="width: 46%" />
+            <col style="width: 18%" />
+            <col style="width: 36%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>ລາຍວິຊາ</th>
+              <th>ຊັ້ນຮຽນ/ລະດັບ</th>
+              <th>ຄ່າຮຽນ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in selected_fees %}
+            <tr>
+              <td>{{ item.subject_name }}</td>
+              <td>{{ item.level_name }}</td>
+              <td>{{ item.fee }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="summary">
+        <div class="summary-row">
+          <div class="summary-label">ຄ່າຮຽນລວມ:</div>
+          <div class="summary-value">{{ tuition_fee }}</div>
+        </div>
+        {% if has_discount %}
+        <div class="summary-row discount">
+          <div class="summary-label">ສ່ວນຫຼຸດ:</div>
+          <div class="summary-value">- {{ discount_amount }}</div>
+        </div>
+        {% endif %}
+        <div class="summary-divider"></div>
+        <div class="summary-total">
+          <div class="summary-total-label">ຕ້ອງຈ່າຍ:</div>
+          <div class="summary-total-value">{{ net_fee }}</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-line"></div>
+        <div class="footer-meta">
+          <div class="footer-text">
+            <p class="lo">ຂໍໃຫ້ທ່ານ ຈົ່ງໂຊກດີ</p>
+            <p class="en">Good luck with your studies!</p>
+          </div>
+          <div class="footer-id">#{{ registration_id }}</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

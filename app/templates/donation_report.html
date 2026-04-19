@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 10mm 12mm 10mm 12mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #dbe3ee;
+        --panel: #f8fbff;
+        --panel-strong: #eef4ff;
+        --accent: #2563eb;
+        --success: #16a34a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #fff;
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #0f172a;
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .date-box {
+        text-align: right;
+      }
+      .date-label {
+        margin: 0;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .date-value {
+        margin: 6px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .title-block {
+        padding: 14px 0 10px;
+      }
+      .report-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .report-subtitle {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr) 260px;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .summary-card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff 0%, var(--panel) 100%);
+      }
+
+      .summary-card.stats-card {
+        padding: 12px 14px;
+      }
+
+      .summary-label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .summary-value {
+        margin-top: 8px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .summary-value.success {
+        color: var(--success);
+      }
+      .summary-value.accent {
+        color: var(--accent);
+      }
+
+      .summary-card .panel-title {
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+
+      .summary-card .category-row {
+        padding: 7px 0;
+      }
+
+      .summary-card .category-row strong {
+        font-weight: 600;
+      }
+
+      .filter-panel {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--panel-strong);
+      }
+
+      .filter-title {
+        margin: 0 0 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chip {
+        padding: 6px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #fff;
+        color: #334155;
+        font-size: 11px;
+      }
+
+      .section-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        margin-top: 12px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden;
+        min-width: 0;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      }
+
+      .panel-body {
+        padding: 12px 14px;
+      }
+      .panel-title {
+        margin: 0 0 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .category-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid #edf2f7;
+      }
+
+      .category-row:last-child {
+        border-bottom: none;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        background: #ffffff;
+      }
+      thead {
+        display: table-header-group;
+      }
+      thead tr {
+        background: linear-gradient(180deg, #eef4ff 0%, #e7f0ff 100%);
+      }
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 11px 10px;
+        vertical-align: middle;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      th {
+        border-bottom: 1px solid #d7e2f2;
+        color: #334155;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: 0.2px;
+      }
+      tbody tr {
+        background: #ffffff;
+      }
+      tbody tr:nth-child(even) {
+        background: #fbfdff;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .amount {
+        color: var(--success);
+        font-size: 13px;
+        font-weight: 400;
+      }
+      .donor-cell {
+        color: #1f2937;
+        font-weight: 400;
+      }
+      .item-name {
+        color: #334155;
+        line-height: 1.45;
+        font-weight: 400;
+      }
+      .unit-cell,
+      .date-cell {
+        color: #475569;
+        font-weight: 400;
+      }
+      .description-cell {
+        color: #64748b;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div>
+        <h1 class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</h1>
+        <p class="brand-subtitle">Palee Elite Training Center</p>
+      </div>
+      <div class="date-box">
+        <p class="date-label">ວັນທີສ້າງ</p>
+        <p class="date-value">{{ generated_at }}</p>
+      </div>
+    </div>
+
+    <div class="title-block">
+      <h2 class="report-title">ລາຍງານການບໍລິຈາກ</h2>
+      <p class="report-subtitle">ສະຫຼຸບລາຍການການບໍລິຈາກ</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">ຈຳນວນລາຍການທັງໝົດ</div>
+        <div class="summary-value accent">{{ total_count }}</div>
+      </div>
+      <div class="summary-card stats-card">
+        <h3 class="panel-title">ສະຖິຕິຕາມປະເພດ</h3>
+        {% if categories %} {% for item in categories %}
+        <div class="category-row">
+          <span>{{ item.name }}</span>
+          <strong>{{ item.count }} ລາຍການ</strong>
+        </div>
+        {% endfor %} {% else %}
+        <div class="muted">ບໍ່ມີຂໍ້ມູນ</div>
+        {% endif %}
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">ຍອດລວມມູນຄ່າເງິນສົດ</div>
+        <div class="summary-value success">{{ total_amount }}</div>
+      </div>
+    </div>
+
+    {% if filter_items %}
+    <div class="filter-panel">
+      <p class="filter-title">ຕົວກອງ</p>
+      <div class="filters">
+        {% for item in filter_items %}
+        <div class="chip">{{ item }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="section-grid">
+      <div class="panel">
+        <table>
+          <thead>
+            <thead>
+              <tr>
+                <th style="width: 5%">ລຳດັບ</th>
+                <th style="width: 18%">ຜູ້ບໍລິຈາກ</th>
+                <th style="width: 10%">ປະເພດ</th>
+                <th style="width: 25%">ລາຍການ</th>
+                <th style="width: 12%">ຈຳນວນ</th>
+                <th style="width: 10%">ຫົວໜ່ວຍ / ສະກຸນເງິນ</th>
+                <th style="width: 10%">ວັນທີ</th>
+                <th style="width: 10%">ໝາຍເຫດ</th>
+              </tr>
+            </thead>
+          </thead>
+          <tbody>
+            {% for item in donations %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td class="text-center">{{ item.donor_name }}</td>
+              <td class="text-center">{{ item.category }}</td>
+              <td class="text-center">{{ item.donation_name }}</td>
+              <td class="text-center">{{ item.amount_display }}</td>
+              <td class="text-center">{{ item.unit }}</td>
+              <td class="text-center">{{ item.donation_date }}</td>
+              <td class="text-center">{{ item.description }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

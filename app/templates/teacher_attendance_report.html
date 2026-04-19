@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 8mm 8mm 8mm 8mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --pad-x: 12mm;
+        --pad-top: 4mm;
+        --pad-bottom: 10mm;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #d1d5db;
+        --line-soft: #e5e7eb;
+        --panel: #f8fafc;
+        --panel-strong: #f3f4f6;
+        --header-fill: #eef2f7;
+        --row-alt: #fafafa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #ffffff;
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .page {
+        width: 100%;
+        padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+      }
+
+      .sheet {
+        padding: 0;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink);
+      }
+
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+
+      .date-box {
+        min-width: 176px;
+        text-align: right;
+      }
+
+      .date-label {
+        margin: 0;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .date-value {
+        margin: 6px 0 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .title-block {
+        padding: 18px 0 14px;
+      }
+
+      .report-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.08;
+        color: var(--ink);
+      }
+
+      .report-subtitle {
+        margin: 7px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 2px;
+      }
+
+      .summary-card {
+        background: linear-gradient(180deg, #ffffff 0%, var(--panel) 100%);
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        padding: 13px 14px;
+      }
+
+      .summary-label {
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+      }
+
+      .summary-value {
+        margin-top: 7px;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .filter-panel {
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: var(--panel-strong);
+        border-radius: 10px;
+      }
+
+      .filter-title {
+        margin: 0 0 9px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        color: var(--muted);
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        padding: 6px 12px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+        font-size: 11px;
+        border-radius: 999px;
+      }
+
+      .table-wrap {
+        margin-top: 14px;
+        padding-bottom: 4mm;
+        break-inside: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      tbody {
+        page-break-inside: auto;
+        break-inside: auto;
+      }
+
+      tbody td {
+        page-break-inside: auto;
+        break-inside: auto;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 8px 8px;
+        vertical-align: middle;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      th {
+        background: var(--header-fill);
+        color: #374151;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.2;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding-top: 7px;
+        padding-bottom: 7px;
+      }
+
+      tbody tr:nth-child(even) {
+        background: var(--row-alt);
+      }
+
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+
+      tbody td {
+        font-size: 11px;
+        line-height: 1.28;
+        color: var(--ink);
+      }
+
+      td.text-center,
+      th.text-center {
+        text-align: center;
+      }
+
+      td.text-strong {
+        font-weight: 500;
+      }
+
+      .col-index {
+        width: 4%;
+      }
+      .col-teacher {
+        width: 13%;
+      }
+      .col-subject {
+        width: 14%;
+      }
+      .col-level {
+        width: 6%;
+      }
+      .col-date {
+        width: 9%;
+      }
+      .col-status {
+        width: 7%;
+      }
+      .col-hours {
+        width: 5%;
+      }
+      .col-rate {
+        width: 10%;
+      }
+      .col-amount {
+        width: 10%;
+      }
+      .col-remark {
+        width: 22%;
+      }
+
+      td.col-index,
+      td.col-level,
+      td.col-date,
+      td.col-status,
+      td.col-hours,
+      td.col-rate,
+      td.col-amount,
+      td.col-remark,
+      th.col-index,
+      th.col-level,
+      th.col-date,
+      th.col-status,
+      th.col-hours,
+      th.col-rate,
+      th.col-amount,
+      th.col-remark {
+        text-align: center;
+      }
+
+      td.col-teacher,
+      td.col-subject,
+      th.col-teacher,
+      th.col-subject {
+        text-align: left;
+      }
+
+      .empty-state {
+        margin-top: 18px;
+        padding: 26px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        text-align: center;
+        color: var(--muted);
+        background: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="sheet">
+        <div class="topbar">
+          <div>
+            <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+            <p class="brand-subtitle">Palee Elite Training Center</p>
+          </div>
+          <div class="date-box">
+            <p class="date-label">ວັນທີພິມ</p>
+            <p class="date-value">{{ generated_at }}</p>
+          </div>
+        </div>
+
+        <div class="title-block">
+          <div>
+            <h5 class="report-title">ລາຍງານການຂື້ນສອນຂອງອາຈານ</h5>
+            <p class="report-subtitle">ສະຫຼຸບການສອນຂື້ນສອນຂອງອາຈານ</p>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">ລາຍການທັງໝົດ</div>
+            <div class="summary-value">{{ total_count }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">ຂຶ້ນສອນ</div>
+            <div class="summary-value">{{ present_count }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">ຂາດສອນ</div>
+            <div class="summary-value">{{ absent_count }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">ຍອດລວມ(ຂື້ນສອນ)</div>
+            <div class="summary-value">{{ total_amount }}</div>
+          </div>
+        </div>
+
+        {% if filter_items %}
+        <div class="filter-panel">
+          <p class="filter-title">ຕົວກອງລາຍງານ</p>
+          <div class="filters">
+            {% for filter_text in filter_items %}
+            <div class="chip">{{ filter_text }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %} {% if logs %}
+        <div class="table-wrap">
+          <table>
+            <colgroup>
+              <col class="col-index" />
+              {% if show_teacher_column %}
+              <col class="col-teacher" />
+              {% endif %}
+              <col class="col-subject" />
+              <col class="col-level" />
+              <col class="col-date" />
+              <col class="col-status" />
+              <col class="col-hours" />
+              <col class="col-rate" />
+              <col class="col-amount" />
+              <col class="col-remark" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="col-index">ລຳດັບ</th>
+                {% if show_teacher_column %}
+                <th class="col-teacher">ອາຈານ</th>
+                {% endif %}
+                <th class="col-subject">ວິຊາ</th>
+                <th class="col-level">ລະດັບ</th>
+                <th class="col-date">ວັນທີ</th>
+                <th class="col-status">ສະຖານະ</th>
+                <th class="col-hours">ຊ.ມ</th>
+                <th class="col-rate">ຄ່າສອນ/ຊມ</th>
+                <th class="col-amount">ຈຳນວນເງິນ</th>
+                <th class="col-remark">ໝາຍເຫດ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in logs %}
+              <tr>
+                <td class="col-index text-strong">{{ loop.index }}</td>
+                {% if show_teacher_column %}
+                <td class="col-teacher text-strong">
+                  {{ log.full_name or '-' }}
+                </td>
+                {% endif %}
+                <td class="col-subject text-strong">
+                  {{ log.subject_display }}
+                </td>
+                <td class="col-level">{{ log.level_name or '-' }}</td>
+                <td class="col-date">{{ log.teaching_date or '-' }}</td>
+                <td class="col-status">{{ log.status or '-' }}</td>
+                <td class="col-hours">{{ log.hourly_display }}</td>
+                <td class="col-rate">{{ log.hourly_rate_display }}</td>
+                <td class="col-amount">{{ log.total_amount_display }}</td>
+                <td class="col-remark">{{ log.remark_display }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">ບໍ່ມີຂໍ້ມູນການເຂົ້າສອນສຳລັບການພິມ</div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      body {
+        margin: 0;
+        font-family: "ReportLao", sans-serif;
+        color: #111827;
+        font-size: 12px;
+      }
+
+      .page {
+        padding: 4mm 12mm 8mm;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid #111827;
+        padding-bottom: 12px;
+      }
+
+      .title {
+        font-size: 17px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .subtitle {
+        margin: 6px 0 0;
+        color: #6b7280;
+      }
+
+      .date-box {
+        text-align: right;
+      }
+
+      .summary-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 12px;
+      }
+
+      .summary-label {
+        color: #6b7280;
+        font-size: 10px;
+      }
+
+      .summary-value {
+        margin-top: 8px;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .filter-panel {
+        margin-top: 12px;
+        border-radius: 10px;
+        background: #f3f4f6;
+        padding: 12px;
+      }
+
+      .chip {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 0 8px 8px 0;
+        border-radius: 999px;
+        background: white;
+        border: 1px solid #d1d5db;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin-top: 14px;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+
+      th,
+      td {
+        border: 1px solid #d1d5db;
+        padding: 8px;
+        word-break: break-word;
+      }
+
+      th {
+        background: #e5eefb;
+        font-size: 10px;
+        text-align: center;
+      }
+
+      tbody tr:nth-child(even) {
+        background: #fafafa;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div>
+          <p class="title">ລາຍງານຜົນການຮຽນ</p>
+          <p class="subtitle">ສະຫຼຸບຕາມຮອບປະເມີນ ແລະ ຕົວກອງທີ່ເລືອກ</p>
+        </div>
+        <div class="date-box">
+          <div>ວັນທີສ້າງ</div>
+          <strong>{{ generated_at }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">ທັງໝົດ</div>
+          <div class="summary-value">{{ total_count }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ອັນດັບ 1</div>
+          <div class="summary-value">{{ rank_one }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ອັນດັບ 2</div>
+          <div class="summary-value">{{ rank_two }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ອັນດັບ 3</div>
+          <div class="summary-value">{{ rank_three }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ລາງວັນລວມ</div>
+          <div class="summary-value">{{ total_prize }}</div>
+        </div>
+      </div>
+
+      {% if filter_items %}
+      <div class="filter-panel">
+        {% for item in filter_items %}
+        <span class="chip">{{ item }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">#</th>
+            <th style="width: 10%">ລະຫັດນັກຮຽນ</th>
+            <th style="width: 15%">ນັກຮຽນ</th>
+            <th style="width: 10%">ແຂວງ</th>
+            <th style="width: 10%">ເມືອງ</th>
+            <th style="width: 12%">ວິຊາ</th>
+            <th style="width: 8%">ລະດັບ</th>
+            <th style="width: 10%">ຮອບປະເມີນ</th>
+            <th style="width: 7%">ຄະແນນ</th>
+            <th style="width: 5%">ອັນດັບ</th>
+            <th style="width: 8%">ລາງວັນ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td class="text-center">{{ item.index }}</td>
+            <td class="text-center">{{ item.student_id }}</td>
+            <td>{{ item.full_name }}</td>
+            <td>{{ item.province_name or '-' }}</td>
+            <td>{{ item.district_name or '-' }}</td>
+            <td>{{ item.subject_name }}</td>
+            <td class="text-center">{{ item.level_name }}</td>
+            <td class="text-center">
+              {% if item.semester == 'Semester 1' %} ກາງພາກ {% elif
+              item.semester == 'Semester 2' %} ທ້າຍພາກ {% else %} {{
+              item.semester }} {% endif %}
+            </td>
+            <td class="text-center">{{ item.score_display }}</td>
+            <td class="text-center">{{ item.ranking }}</td>
+            <td class="text-center">{{ item.prize_display }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

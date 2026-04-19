@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A5;
+        margin: 0;
+      }
+
+      @font-face {
+        font-family: "ReceiptLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReceiptLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --text: #111827;
+        --muted: #6b7280;
+        --line: #d1d5db;
+        --line-strong: #111827;
+        --page-width: 148mm;
+        --page-height: 210mm;
+        --pad-x: 8.5mm;
+        --pad-top: 7.5mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: var(--page-width);
+        height: var(--page-height);
+        background: #fff;
+        color: var(--text);
+        font-family: "ReceiptLao", sans-serif;
+        overflow: hidden;
+      }
+
+      .page {
+        width: var(--page-width);
+        height: var(--page-height);
+        padding: var(--pad-top) var(--pad-x) 8mm;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        isolation: isolate;
+      }
+
+      .watermark {
+        position: absolute;
+        top: 46%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-26deg);
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border: 4px solid currentColor;
+        border-radius: 14px;
+        padding: 11px 20px;
+        opacity: 0.11;
+        z-index: 0;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      .watermark.is-paid {
+        color: #00d138;
+      }
+
+      .watermark.is-partial {
+        color: #ff8902;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 9px;
+        font-weight: 700;
+      }
+
+      .date-box {
+        text-align: right;
+      }
+
+      .date-label {
+        margin: 0;
+        font-size: 9px;
+        color: var(--muted);
+      }
+
+      .date-value {
+        margin: 4px 0 0;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .heavy-rule {
+        height: 1px;
+        background: var(--line-strong);
+        margin-top: 8px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .title-block {
+        text-align: center;
+        padding: 14px 0 10px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .invoice {
+        margin: 6px 0 0;
+        font-size: 10px;
+        color: #374151;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: 46% 18% 36%;
+        border-top: 1.5px solid var(--line-strong);
+        border-bottom: 1.5px solid var(--line-strong);
+        position: relative;
+        z-index: 1;
+      }
+
+      .meta-item {
+        padding: 9px 10px 10px;
+      }
+
+      .meta-item:nth-child(2) {
+        text-align: center;
+      }
+
+      .meta-item:nth-child(3) {
+        text-align: right;
+      }
+
+      .meta-label {
+        font-size: 10px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .meta-value {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        word-break: break-word;
+      }
+
+      .payment-method-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 8px 10px 9px;
+        border-bottom: 1px solid var(--line);
+        position: relative;
+        z-index: 1;
+      }
+
+      .payment-method-label {
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .payment-method-value {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        table-layout: fixed;
+        position: relative;
+        z-index: 1;
+      }
+
+      .payment-table th,
+      .payment-table td {
+        padding: 9px 8px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .payment-table th {
+        font-size: 10px;
+        font-weight: 700;
+        color: #374151;
+        background: #fafafa;
+        text-align: left;
+      }
+
+      .payment-table td {
+        font-size: 10px;
+      }
+
+      .payment-table th:nth-child(2),
+      .payment-table td:nth-child(2) {
+        text-align: center;
+      }
+
+      .payment-table th:nth-child(3),
+      .payment-table td:nth-child(3) {
+        text-align: right;
+      }
+
+      .summary {
+        margin-top: 14px;
+        margin-left: auto;
+        width: 250px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .summary-row + .summary-row {
+        margin-top: 7px;
+      }
+
+      .summary-label {
+        font-weight: 700;
+      }
+
+      .summary-value {
+        min-width: 104px;
+        text-align: right;
+      }
+
+      .summary-sub {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .summary-dashed {
+        margin: 8px 0 9px;
+        border-top: 1px dashed var(--line);
+      }
+
+      .summary-remaining {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .footer {
+        margin-top: auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .footer-line {
+        position: relative;
+        border-top: 1.1px dashed var(--line);
+        height: 0;
+      }
+
+      .footer-line::before,
+      .footer-line::after {
+        content: "";
+        position: absolute;
+        top: -10px;
+        width: 20px;
+        height: 20px;
+        border: 1.2px solid var(--line-strong);
+        border-radius: 50%;
+        background: #ffffff;
+      }
+
+      .footer-line::before {
+        left: -10px;
+      }
+
+      .footer-line::after {
+        right: -10px;
+      }
+
+      .footer-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-top: 14px;
+      }
+
+      .footer-text {
+        color: var(--muted);
+      }
+
+      .footer-text p {
+        margin: 10px 0 0;
+      }
+
+      .footer-text p + p {
+        margin-top: 10px;
+      }
+
+      .footer-text .lo {
+        font-size: 10px;
+        line-height: 1.15;
+      }
+
+      .footer-text .en {
+        font-size: 9px;
+        line-height: 1.15;
+      }
+
+      .footer-id {
+        color: var(--muted);
+        font-size: 9px;
+        line-height: 1.2;
+        padding-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="watermark {{ watermark_class }}">{{ watermark_label }}</div>
+
+      <div class="topbar">
+        <div>
+          <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+          <p class="brand-subtitle">Palee Elite Training Center</p>
+        </div>
+        <div class="date-box">
+          <p class="date-label">ວັນທີ</p>
+          <p class="date-value">{{ pay_date }}</p>
+        </div>
+      </div>
+
+      <div class="heavy-rule"></div>
+
+      <div class="title-block">
+        <p class="title">ໃບບິນຈ່າຍຄ່າຮຽນ</p>
+        <p class="invoice">ເລກໃບບິນ: {{ invoice_id }}</p>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">ລະຫັດລົງທະບຽນ</div>
+          <div class="meta-value">{{ registration_id }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">ຊື່ນັກຮຽນ</div>
+          <div class="meta-value">{{ student_name }}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">ງວດທີ</div>
+          <div class="meta-value">{{ installment_label }}</div>
+        </div>
+      </div>
+
+      <div class="payment-method-row">
+        <div class="payment-method-label">ຈ່າຍດ້ວຍ</div>
+        <div class="payment-method-value">{{ payment_method }}</div>
+      </div>
+
+      <table class="payment-table">
+        <colgroup>
+          <col style="width: 46%" />
+          <col style="width: 18%" />
+          <col style="width: 36%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ລາຍວິຊາ</th>
+            <th>ຊັ້ນ/ລະດັບ</th>
+            <th>ຄ່າຮຽນ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in selected_fees %}
+          <tr>
+            <td>{{ item.subject_name }}</td>
+            <td>{{ item.level_name }}</td>
+            <td>{{ item.fee }}</td>
+          </tr>
+          {% endfor %} {% if show_other_fee %}
+          <tr>
+            <td>{{ other_fee_label }}</td>
+            <td>-</td>
+            <td>{{ other_fee_amount }}</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <div class="summary">
+        <div class="summary-row">
+          <div class="summary-label">ລວມທັງໝົດ</div>
+          <div class="summary-value">{{ total_fee }}</div>
+        </div>
+        <div class="summary-row summary-sub">
+          <div>ຈ່າຍແລ້ວ</div>
+          <div class="summary-value">{{ paid_amount }}</div>
+        </div>
+        <div class="summary-row summary-sub">
+          <div>ຈ່າຍງວດນີ້</div>
+          <div class="summary-value">{{ current_payment_amount }}</div>
+        </div>
+        <div class="summary-dashed"></div>
+        <div class="summary-row summary-remaining">
+          <div class="summary-label">ຍັງຄ້າງຈ່າຍ</div>
+          <div class="summary-value">{{ remaining_amount }}</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-line"></div>
+        <div class="footer-meta">
+          <div class="footer-text">
+            <p class="lo">ຂໍໃຫ້ທ່ານ ຈົ່ງໂຊກດີ</p>
+            <p class="en">Good luck with your studies!</p>
+          </div>
+          <div class="footer-id">#{{ registration_id }}</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

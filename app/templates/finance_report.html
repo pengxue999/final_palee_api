@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 6mm 8mm 6mm 8mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --pad-x: 12mm;
+        --pad-top: 2mm;
+        --pad-bottom: 4mm;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #d1d5db;
+        --line-soft: #e5e7eb;
+        --panel: #f5f8fc;
+        --header-fill: #eef3fa;
+        --row-alt: #fafcff;
+        --blue: #3b82f6;
+        --green: #16a34a;
+        --red: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #ffffff;
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .page {
+        width: 100%;
+        padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+      }
+
+      .overview-page {
+        overflow: visible;
+      }
+
+      .sheet {
+        padding: 0;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ink);
+      }
+
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+
+      .date-box {
+        min-width: 176px;
+        text-align: right;
+      }
+
+      .date-label {
+        margin: 0;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .date-value {
+        margin: 6px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .overview-page .title-block {
+        padding: 8px 0 8px;
+      }
+
+      .report-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.08;
+        color: var(--ink);
+      }
+
+      .report-subtitle {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .overview-page .report-title {
+        font-size: 15px;
+      }
+
+      .overview-page .report-subtitle {
+        margin-top: 3px;
+        font-size: 10px;
+      }
+
+      .overview-shell {
+        background: var(--panel);
+        border: 1px solid var(--line-soft);
+        border-radius: 12px;
+        padding: 10px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .overview-page .overview-shell {
+        background: linear-gradient(180deg, #fbfdff 0%, var(--panel) 100%);
+        border: 1px solid var(--line-soft);
+        border-radius: 16px;
+        padding: 10px 12px;
+        page-break-inside: auto;
+        break-inside: auto;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .overview-page .toolbar {
+        margin-bottom: 8px;
+      }
+
+      .tabs,
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .tab,
+      .year-box,
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .overview-page .tab,
+      .overview-page .year-box,
+      .overview-page .action-btn {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 11px;
+      }
+
+      .tab.active {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #ffffff;
+      }
+
+      .year-box {
+        min-width: 74px;
+      }
+
+      .action-btn.blue {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #ffffff;
+      }
+
+      .action-btn.disabled {
+        background: #eef2f7;
+        color: #94a3b8;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .overview-page .cards {
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .card,
+      .chart-card,
+      .bars-card,
+      .table-shell {
+        background: #ffffff;
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+      }
+
+      .card {
+        padding: 12px 14px;
+      }
+
+      .overview-page .card {
+        padding: 10px 12px;
+        background: #ffffff;
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+      }
+
+      .summary-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .overview-page .summary-top {
+        gap: 8px;
+        font-size: 10px;
+      }
+
+      .summary-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+      }
+
+      .summary-icon.green {
+        background: #e8f7ee;
+      }
+
+      .summary-icon.red {
+        background: #fdecec;
+      }
+
+      .summary-icon.blue {
+        background: #eaf2ff;
+      }
+
+      .summary-value {
+        margin-top: 12px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .overview-page .summary-value {
+        margin-top: 8px;
+        font-size: 15px;
+      }
+
+      .summary-value.green {
+        color: var(--green);
+      }
+
+      .summary-value.red {
+        color: var(--red);
+      }
+
+      .summary-value.blue {
+        color: var(--blue);
+      }
+
+      .chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .overview-page .chart-grid {
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .chart-card,
+      .bars-card {
+        padding: 10px 12px;
+      }
+
+      .overview-page .chart-card,
+      .overview-page .bars-card {
+        padding: 10px 12px;
+        background: #ffffff;
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+      }
+
+      .overview-page .bars-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      .chart-title {
+        margin: 0 0 8px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .overview-page .chart-title {
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      .donut-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .overview-page .donut-wrap {
+        gap: 8px;
+      }
+
+      .donut {
+        position: relative;
+        width: 150px;
+        height: 150px;
+      }
+
+      .overview-page .donut {
+        width: 146px;
+        height: 146px;
+      }
+
+      .donut-image {
+        display: block;
+        width: 150px;
+        height: 150px;
+      }
+
+      .overview-page .donut-image {
+        width: 146px;
+        height: 146px;
+      }
+
+      .legend {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 11px;
+      }
+
+      .overview-page .legend {
+        gap: 8px;
+        font-size: 9px;
+        justify-content: flex-start;
+      }
+
+      .legend-item,
+      .bar-legend {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .overview-page .legend-item,
+      .overview-page .bar-legend {
+        gap: 5px;
+      }
+
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: 0 0 auto;
+      }
+
+      .legend-dot.income-c1 {
+        background: #2563eb;
+      }
+
+      .legend-dot.income-c2 {
+        background: #16a34a;
+      }
+
+      .legend-dot.income-c3 {
+        background: #8b5cf6;
+      }
+
+      .legend-dot.income-c4 {
+        background: #f59e0b;
+      }
+
+      .legend-dot.income-c5 {
+        background: #06b6d4;
+      }
+
+      .legend-dot.expense-c1 {
+        background: #dc2626;
+      }
+
+      .legend-dot.expense-c2 {
+        background: #f97316;
+      }
+
+      .legend-dot.expense-c3 {
+        background: #0ea5e9;
+      }
+
+      .legend-dot.expense-c4 {
+        background: #8b5cf6;
+      }
+
+      .legend-dot.expense-c5 {
+        background: #2563eb;
+      }
+
+      .bars-image {
+        display: block;
+        width: 100%;
+        height: 175px;
+        object-fit: fill;
+      }
+
+      .overview-page .bars-image {
+        height: 158px;
+        object-fit: contain;
+      }
+
+      .bar-legend-wrap {
+        margin-top: 8px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        font-size: 11px;
+      }
+
+      .overview-page .bar-legend-wrap {
+        margin-top: 6px;
+        gap: 16px;
+        font-size: 10px;
+      }
+
+      .table-shell {
+        padding: 12px;
+      }
+
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .table-title {
+        margin: 10px 0 10px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .table-subtitle {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 10px 10px;
+        vertical-align: middle;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      th {
+        background: var(--header-fill);
+        color: #596b84;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: left;
+      }
+
+      td {
+        font-size: 12px;
+      }
+
+      tbody tr:nth-child(even) {
+        background: var(--row-alt);
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .amount-income {
+        color: var(--green);
+        font-weight: 700;
+      }
+
+      .amount-expense {
+        color: var(--red);
+        font-weight: 700;
+      }
+
+      .badge-income,
+      .badge-expense {
+        display: inline-block;
+        min-width: 120px;
+        padding: 5px 9px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .badge-income {
+        background: #dbeafe;
+        color: #3b82f6;
+      }
+
+      .badge-expense {
+        background: #fee2e2;
+        color: #ef4444;
+      }
+
+      .empty {
+        padding: 20px;
+        text-align: center;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        color: var(--muted);
+        background: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    {% if tab == 'overview' %}
+    <div class="page overview-page">
+      <div class="sheet">
+        <div class="topbar">
+          <div>
+            <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+            <p class="brand-subtitle">Palee Elite Training Center</p>
+          </div>
+          <div class="date-box">
+            <p class="date-label">ວັນທີພິມ</p>
+            <p class="date-value">{{ generated_at }}</p>
+          </div>
+        </div>
+
+        <div class="title-block">
+          <h5 class="report-title">ລາຍງານການເງິນ</h5>
+          <p class="report-subtitle">
+            ສະຫຼຸບລາຍຮັບ, ລາຍຈ່າຍ ແລະ ຍອດເຫຼືອ ປະຈຳປີ
+          </p>
+        </div>
+
+          <div class="cards">
+            <div class="card">
+              <div class="summary-top">
+                <div class="summary-icon green"></div>
+                <div>ລາຍຮັບທັງໝົດ</div>
+              </div>
+              <div class="summary-value green">{{ summary.total_income }}</div>
+            </div>
+            <div class="card">
+              <div class="summary-top">
+                <div class="summary-icon red"></div>
+                <div>ລາຍຈ່າຍທັງໝົດ</div>
+              </div>
+              <div class="summary-value red">{{ summary.total_expense }}</div>
+            </div>
+            <div class="card">
+              <div class="summary-top">
+                <div class="summary-icon blue"></div>
+                <div>ຍອດເຫຼືອ</div>
+              </div>
+              <div class="summary-value blue">{{ summary.balance }}</div>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h3 class="chart-title">ລາຍຮັບແຍກຕາມແຫຼ່ງ</h3>
+              {% if income_breakdown %}
+              <div class="donut-wrap">
+                <div class="donut">
+                  <img
+                    class="donut-image"
+                    src="{{ income_chart_svg }}"
+                    alt="income chart"
+                  />
+                </div>
+                <div class="legend">
+                  {% for item in income_breakdown %}
+                  <div class="legend-item">
+                    <span class="legend-dot {{ item.color_class }}"></span>
+                    <span>{{ item.category }}: {{ item.amount_display }}</span>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% else %}
+              <div class="empty">ບໍ່ມີຂໍ້ມູນລາຍຮັບ</div>
+              {% endif %}
+            </div>
+
+            <div class="chart-card">
+              <h3 class="chart-title">ລາຍຈ່າຍແຍກຕາມປະເພດ</h3>
+              {% if expense_breakdown %}
+              <div class="donut-wrap">
+                <div class="donut">
+                  <img
+                    class="donut-image"
+                    src="{{ expense_chart_svg }}"
+                    alt="expense chart"
+                  />
+                </div>
+                <div class="legend">
+                  {% for item in expense_breakdown %}
+                  <div class="legend-item">
+                    <span class="legend-dot {{ item.color_class }}"></span>
+                    <span>{{ item.category }}: {{ item.amount_display }}</span>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% else %}
+              <div class="empty">ບໍ່ມີຂໍ້ມູນລາຍຈ່າຍ</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="bars-card">
+            <h3 class="chart-title">ສົມທຽບລາຍຮັບ-ລາຍຈ່າຍຕາມປີ</h3>
+            {% if yearly_chart_svg %}
+            <img
+              class="bars-image"
+              src="{{ yearly_chart_svg }}"
+              alt="yearly chart"
+            />
+            <div class="bar-legend-wrap">
+              <div class="bar-legend">
+                <span class="legend-dot income-c2"></span><span>ລາຍຮັບ</span>
+              </div>
+              <div class="bar-legend">
+                <span class="legend-dot expense-c1"></span><span>ລາຍຈ່າຍ</span>
+              </div>
+            </div>
+            {% else %}
+            <div class="empty">ບໍ່ມີຂໍ້ມູນປຽບທຽບລາຍປີ</div>
+            {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %} {% if tab == 'income' %}
+    <div class="page">
+      <div class="sheet">
+        <div class="topbar">
+          <div>
+            <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+            <p class="brand-subtitle">Palee Elite Training Center</p>
+          </div>
+          <div class="date-box">
+            <p class="date-label">ວັນທີພິມ</p>
+            <p class="date-value">{{ generated_at }}</p>
+          </div>
+        </div>
+
+
+          <div class="table-header">
+            <div>
+              <h1 class="table-title">ຂໍ້ມູນລາຍຮັບ</h1>
+              <p class="table-subtitle">
+                ທັງໝົດ {{ total_income_count }} ລາຍການ
+              </p>
+            </div>
+            <div class="filter-chip">ປີ {{ selected_year }}</div>
+          </div>
+
+          {% if incomes %}
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 8%">ລຳດັບ</th>
+                <th style="width: 20%">ຈຳນວນເງິນ</th>
+                <th style="width: 34%">ລາຍລະອຽດ</th>
+                <th style="width: 23%">ແຫຼ່ງທີ່ມາ</th>
+                <th style="width: 15%">ວັນທີ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in incomes %}
+              <tr>
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="amount-income">{{ item.amount_display }}</td>
+                <td>{{ item.description_display }}</td>
+                <td><span class="badge-income">{{ item.source }}</span></td>
+                <td>{{ item.income_date_display }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="empty">ບໍ່ມີຂໍ້ມູນລາຍຮັບ</div>
+          {% endif %}
+      </div>
+    </div>
+    {% endif %} {% if tab == 'expense' %}
+    <div class="page">
+      <div class="sheet">
+        <div class="topbar">
+          <div>
+            <p class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</p>
+            <p class="brand-subtitle">Palee Elite Training Center</p>
+          </div>
+          <div class="date-box">
+            <p class="date-label">ວັນທີພິມ</p>
+            <p class="date-value">{{ generated_at }}</p>
+          </div>
+        </div>
+
+
+          <div class="table-header">
+            <div>
+              <h1 class="table-title">ຂໍ້ມູນລາຍຈ່າຍ</h1>
+              <p class="table-subtitle">
+                ທັງໝົດ {{ total_expense_count }} ລາຍການ
+              </p>
+            </div>
+            <div class="filter-chip">ປີ {{ selected_year }}</div>
+          </div>
+
+          {% if expenses %}
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 8%">ລຳດັບ</th>
+                <th style="width: 20%">ຈຳນວນເງິນ</th>
+                <th style="width: 34%">ລາຍລະອຽດ</th>
+                <th style="width: 23%">ປະເພດ</th>
+                <th style="width: 15%">ວັນທີ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in expenses %}
+              <tr>
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="amount-expense">{{ item.amount_display }}</td>
+                <td>{{ item.description_display }}</td>
+                <td><span class="badge-expense">{{ item.category }}</span></td>
+                <td>{{ item.expense_date_display }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="empty">ບໍ່ມີຂໍ້ມູນລາຍຈ່າຍ</div>
+          {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </body>
+</html>
