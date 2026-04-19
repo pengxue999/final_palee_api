@@ -244,8 +244,8 @@ def _normalize_prize(prize: Decimal | str | None) -> Decimal | None:
 def _prize_for_rank(rank: int, fee_amount: Decimal) -> Decimal | None:
     percentages = {
         1: Decimal('0.50'),
-        2: Decimal('0.40'),
-        3: Decimal('0.30'),
+        2: Decimal('0.25'),
+        3: Decimal('0.125'),
     }
     percentage = percentages.get(rank)
     if percentage is None:
