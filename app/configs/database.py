@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 import os
+import ssl
 from sqlalchemy.sql import text
 
 load_dotenv()
@@ -56,12 +57,14 @@ def _build_connect_args() -> dict:
     if not _should_use_ssl():
         return {}
 
-    ssl_options = {}
     ca_path = _resolve_ssl_ca()
-    if ca_path:
-        ssl_options["ca"] = ca_path
+    ssl_context = (
+        ssl.create_default_context(cafile=ca_path)
+        if ca_path
+        else ssl.create_default_context()
+    )
 
-    return {"ssl": ssl_options}
+    return {"ssl": ssl_context}
 
 DATABASE_URL = _build_database_url()
 

@@ -29,7 +29,7 @@ def get_all(db: Session):
 def get_by_id(db: Session, fee_id: str) -> Fee:
     obj = db.query(Fee).options(*_fee_options()).filter(Fee.fee_id == fee_id).first()
     if not obj:
-        raise NotFoundException("ຂໍ້ມູນຄ່າທຳນຽມ")
+        raise NotFoundException("ຂໍ້ມູນຄ່າຮຽນ")
     return obj
 
 def create(db: Session, data: FeeCreate):
@@ -45,7 +45,7 @@ def create(db: Session, data: FeeCreate):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise ConflictException("ຄ່າທຳນຽມຂອງວິຊາ/ລະດັບ/ສົກຮຽນນີ້ມີຢູ່ແລ້ວ")
+        raise ConflictException("ຄ່າຮຽນຂອງວິຊາ/ລະດັບ/ສົກຮຽນນີ້ມີຢູ່ແລ້ວ")
     db.refresh(obj)
     return get_by_id(db, fee_id)
 
