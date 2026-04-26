@@ -16,6 +16,8 @@ def format_date(value):
 def parse_date_input(value):
     if value is None or value == '':
         return None
+    if isinstance(value, datetime):
+        return value.date()
     if isinstance(value, date):
         return value
     if isinstance(value, str):
@@ -30,7 +32,7 @@ def parse_date_input(value):
 
 class EvaluationCreate(BaseModel):
     semester: str
-    evaluation_date: date
+    evaluation_date: Optional[date] = None
 
     @field_validator('evaluation_date', mode='before')
     @classmethod
@@ -52,6 +54,11 @@ class EvaluationResponse(BaseModel):
     evaluation_id: str
     semester: str
     evaluation_date: date
+
+    @field_validator('evaluation_date', mode='before')
+    @classmethod
+    def validate_evaluation_date(cls, value):
+        return parse_date_input(value)
 
     @classmethod
     def model_validate(cls, obj):
@@ -146,7 +153,7 @@ class ScoreEntrySaveRequest(BaseModel):
     semester: str
     level_id: str
     subject_detail_id: str
-    evaluation_date: date
+    evaluation_date: Optional[date] = None
     scores: list[ScoreEntryStudentPayload]
 
     @field_validator('evaluation_date', mode='before')
@@ -194,6 +201,11 @@ class ScoreEntrySheetResponse(BaseModel):
     summary: ScoreEntrySummaryResponse
     students: list[ScoreEntryStudentResponse]
 
+    @field_validator('evaluation_date', mode='before')
+    @classmethod
+    def validate_evaluation_date(cls, value):
+        return parse_date_input(value)
+
     @field_serializer('evaluation_date')
     def serialize_sheet_date(self, value):
         if value is None:
@@ -203,12 +215,15 @@ class ScoreEntrySheetResponse(BaseModel):
 
 class AssessmentReportItemResponse(BaseModel):
     evaluation_id: str
+    regis_detail_id: int
     academic_id: Optional[str] = None
     academic_year: Optional[str] = None
     semester: str
     evaluation_type: Optional[str] = None
     subject_id: str
+    subject_detail_id: str
     level_id: str
+    evaluation_date: Optional[date] = None
     student_id: str
     student_name: str
     student_lastname: str
@@ -220,6 +235,17 @@ class AssessmentReportItemResponse(BaseModel):
     score: Decimal
     ranking: int
     prize: Optional[Decimal] = None
+
+    @field_validator('evaluation_date', mode='before')
+    @classmethod
+    def validate_evaluation_date(cls, value):
+        return parse_date_input(value)
+
+    @field_serializer('evaluation_date')
+    def serialize_evaluation_date(self, value):
+        if value is None:
+            return None
+        return value.strftime("%Y-%m-%d")
 
 
 class StudentTranscriptItemResponse(BaseModel):

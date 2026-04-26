@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
 import re
 
@@ -185,7 +185,26 @@ def _repair_invalid_evaluation_semester(
     ).first()
 
 
-def _get_evaluation(db: Session, semester: SemesterEnum):
+def _get_evaluation(
+    db: Session,
+    semester: SemesterEnum,
+    regis_detail_ids: set[int] | None = None,
+):
+    if regis_detail_ids:
+        obj = db.query(Evaluation).join(
+            EvaluationDetail,
+            EvaluationDetail.evaluation_id == Evaluation.evaluation_id,
+        ).filter(
+            Evaluation.semester == semester,
+            EvaluationDetail.regis_detail_id.in_(regis_detail_ids),
+        ).order_by(
+            Evaluation.evaluation_date.desc(),
+            Evaluation.evaluation_id.desc(),
+        ).first()
+        if obj is not None:
+            return obj
+        return None
+
     obj = db.query(Evaluation).filter(
         Evaluation.semester == semester,
     ).order_by(
@@ -201,19 +220,24 @@ def _get_evaluation(db: Session, semester: SemesterEnum):
 def _get_or_create_evaluation(
     db: Session,
     semester: SemesterEnum,
-    evaluation_date: date,
+    evaluation_date: date | None,
+    regis_detail_ids: set[int] | None = None,
 ):
-    obj = _get_evaluation(db, semester)
+    resolved_evaluation_date = evaluation_date or datetime.now()
+    obj = _get_evaluation(db, semester, regis_detail_ids)
     if obj:
-        obj.evaluation_date = evaluation_date
+        if evaluation_date is not None:
+            obj.evaluation_date = evaluation_date
         db.flush()
         return obj
 
-    obj = Evaluation(
-        evaluation_id=_generate_evaluation_id(db),
-        semester=semester,
-        evaluation_date=evaluation_date,
-    )
+    payload = {
+        'evaluation_id': _generate_evaluation_id(db),
+        'semester': semester,
+        'evaluation_date': resolved_evaluation_date,
+    }
+
+    obj = Evaluation(**payload)
     db.add(obj)
     db.flush()
     return obj
@@ -506,11 +530,13 @@ def get_by_id(db: Session, evaluation_id: str):
 
 
 def create(db: Session, data: EvaluationCreate):
-    obj = Evaluation(
-        evaluation_id=_generate_evaluation_id(db),
-        semester=_parse_semester(data.semester),
-        evaluation_date=data.evaluation_date,
-    )
+    payload = {
+        'evaluation_id': _generate_evaluation_id(db),
+        'semester': _parse_semester(data.semester),
+        'evaluation_date': data.evaluation_date or datetime.now(),
+    }
+
+    obj = Evaluation(**payload)
     db.add(obj)
     db.commit()
     db.refresh(obj)
@@ -557,7 +583,8 @@ def get_score_entry_sheet(
     if not registrations:
         raise ValidationException('ບໍ່ພົບນັກຮຽນທີ່ລົງທະບຽນໃນວິຊານີ້')
 
-    evaluation = _get_evaluation(db, semester_enum)
+    registration_ids = {item.regis_detail_id for item in registrations}
+    evaluation = _get_evaluation(db, semester_enum, registration_ids)
     score_values: dict[int, Decimal | None] = {
         item.regis_detail_id: None for item in registrations
     }
@@ -640,7 +667,11 @@ def preview_score_entry_sheet(
         registrations,
         data.scores,
     )
-    evaluation = _get_evaluation(db, semester_enum)
+    evaluation = _get_evaluation(
+        db,
+        semester_enum,
+        {item.regis_detail_id for item in registrations},
+    )
     student_rows = _build_student_rows(
         registrations,
         scores_by_regis_detail_id,
@@ -680,6 +711,7 @@ def save_score_entry_sheet(
         db,
         semester_enum,
         data.evaluation_date,
+        set(valid_registration_details.keys()),
     )
     existing_map = _score_map(db, evaluation.evaluation_id)
 
@@ -808,12 +840,15 @@ def get_assessment_report(
     return [
         AssessmentReportItemResponse(
             evaluation_id=row.evaluation_id,
+            regis_detail_id=row.regis_detail_id,
             academic_id=row.registration_detail.fee_rel.academic_id,
             academic_year=getattr(row.registration_detail.fee_rel.academic_year, 'academic_year', None),
             semester=row.evaluation.semester.value,
             evaluation_type=None,
             subject_id=row.registration_detail.fee_rel.subject_detail.subject.subject_id,
+            subject_detail_id=row.registration_detail.fee_rel.subject_detail.subject_detail_id,
             level_id=row.registration_detail.fee_rel.subject_detail.level.level_id,
+            evaluation_date=row.evaluation.evaluation_date,
             student_id=row.registration_detail.registration.student.student_id,
             student_name=row.registration_detail.registration.student.student_name,
             student_lastname=row.registration_detail.registration.student.student_lastname,

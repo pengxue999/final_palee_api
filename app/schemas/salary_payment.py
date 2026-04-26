@@ -47,9 +47,9 @@ class SalaryPaymentResponse(BaseModel):
         return cls(
             salary_payment_id=obj.salary_payment_id,
             teacher_id=obj.teacher_id,
-            teacher_name=obj.teacher.teacher_name,
-            teacher_lastname=obj.teacher.teacher_lastname,
-            user_name=obj.user.user_name,
+            teacher_name=obj.teacher.teacher_name if obj.teacher else '',
+            teacher_lastname=obj.teacher.teacher_lastname if obj.teacher else '',
+            user_name=obj.user.user_name if obj.user else '-',
             year=obj.payment_date.year,
             month=obj.month,
             total_amount=obj.total_amount,

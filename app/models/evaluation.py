@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Date, Enum
+from sqlalchemy import Column, String, DateTime, Enum, func
 from sqlalchemy.orm import relationship
 from app.configs.database import Base
 from app.enums.semester import SemesterEnum
@@ -14,6 +14,6 @@ class Evaluation(Base):
 
     evaluation_id = Column(String(20), primary_key=True)
     semester = Column(_semester_enum, nullable=False)
-    evaluation_date = Column(Date, nullable=False)
+    evaluation_date = Column(DateTime, nullable=False, server_default=func.now())
 
     evaluation_details = relationship("EvaluationDetail", back_populates="evaluation")
