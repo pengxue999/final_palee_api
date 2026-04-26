@@ -274,6 +274,64 @@ def teacher_attendance_report_pdf(
     )
 
 
+@router.get("/salary-payments")
+def get_salary_payment_report(
+    month: Optional[int] = Query(None, description="ເດືອນ 1-12 (optional)"),
+    teacher_id: Optional[str] = Query(None, description="ລະຫັດອາຈານ (optional)"),
+    status: Optional[str] = Query(None, description="ສະຖານະການຈ່າຍ (optional)"),
+    db: Session = Depends(get_db)
+):
+    result = svc.get_salary_payment_report(
+        db,
+        month=month,
+        teacher_id=teacher_id,
+        status=status,
+    )
+    return success_response(result, "ດຶງຂໍ້ມູນລາຍງານເບີກຈ່າຍເງິນສອນສຳເລັດ")
+
+
+@router.get("/salary-payments/export")
+def export_salary_payment_report(
+    month: Optional[int] = Query(None, description="ເດືອນ 1-12 (optional)"),
+    teacher_id: Optional[str] = Query(None, description="ລະຫັດອາຈານ (optional)"),
+    status: Optional[str] = Query(None, description="ສະຖານະການຈ່າຍ (optional)"),
+    format: str = Query("excel", description="ຮູບແບບໄຟລ໌: csv ຫຼື excel"),
+    db: Session = Depends(get_db)
+):
+    result = svc.export_salary_payment_report(
+        db,
+        month=month,
+        teacher_id=teacher_id,
+        status=status,
+        format=format,
+    )
+    return success_response(result, "Export ລາຍງານເບີກຈ່າຍເງິນສອນສຳເລັດ")
+
+
+@router.get("/salary-payments/report-pdf")
+def salary_payment_report_pdf(
+    month: Optional[int] = Query(None, description="ເດືອນ 1-12 (optional)"),
+    teacher_id: Optional[str] = Query(None, description="ລະຫັດອາຈານ (optional)"),
+    status: Optional[str] = Query(None, description="ສະຖານະການຈ່າຍ (optional)"),
+    db: Session = Depends(get_db)
+):
+    report_data = svc.get_salary_payment_report(
+        db,
+        month=month,
+        teacher_id=teacher_id,
+        status=status,
+    )
+    pdf_bytes = receipt_pdf_svc.build_salary_payment_report_pdf(report_data)
+    filename = "salary_payment_report.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
 @router.get("/finance")
 def get_finance_report(
     academic_id: Optional[str] = Query(None, description="ລະຫັດສົກຮຽນ (optional)"),

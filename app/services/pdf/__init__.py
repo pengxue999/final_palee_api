@@ -1,4 +1,5 @@
 from app.services.pdf.builders import (
+    build_donation_certificate_pdf,
     build_donation_report_pdf,
     build_finance_report_pdf,
     build_popular_subject_level_report_pdf,
@@ -12,6 +13,7 @@ from app.services.pdf.builders import (
 )
 
 __all__ = [
+    "build_donation_certificate_pdf",
     "build_donation_report_pdf",
     "build_finance_report_pdf",
     "build_popular_subject_level_report_pdf",

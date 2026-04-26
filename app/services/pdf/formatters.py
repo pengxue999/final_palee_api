@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 
@@ -6,9 +6,12 @@ def format_currency(value: Decimal) -> str:
     return f"{int(value):,} ກີບ"
 
 
-def format_date(value: datetime) -> str:
-    has_time = value.hour != 0 or value.minute != 0 or value.second != 0
-    return value.strftime("%d-%m-%Y %H:%M:%S" if has_time else "%d/%m/%Y")
+def format_date(value: date | datetime) -> str:
+    if isinstance(value, datetime):
+        has_time = value.hour != 0 or value.minute != 0 or value.second != 0
+        return value.strftime("%d-%m-%Y %H:%M:%S" if has_time else "%d/%m/%Y")
+
+    return value.strftime("%d/%m/%Y")
 
 
 def format_hours(value: float) -> str:

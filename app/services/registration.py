@@ -4,11 +4,14 @@ from sqlalchemy import func, and_
 from app.models.registration import Registration
 from app.models.registration_detail import RegistrationDetail
 from app.models.fee import Fee
+from app.models.subject_detail import SubjectDetail
 from app.models.tuition_payment import TuitionPayment
 from sqlalchemy import select
 from app.schemas.registration import (
     RegistrationCreate, RegistrationUpdate,
     RegistrationBulkCreate,
+    RegistrationReceiptFeeItem,
+    RegistrationReceiptRequest,
 )
 from app.configs.exceptions import NotFoundException, ConflictException, ValidationException
 from app.utils.foreign_key_helper import safe_delete_with_constraint_check
@@ -54,6 +57,71 @@ def get_by_id(db: Session, registration_id: str) -> Registration:
     if not obj:
         raise NotFoundException("ຂໍ້ມູນການລົງທະບຽນ")
     return obj
+
+
+def build_receipt_request(db: Session, registration_id: str) -> RegistrationReceiptRequest:
+    obj = db.query(Registration).options(
+        joinedload(Registration.student),
+        joinedload(Registration.details)
+        .joinedload(RegistrationDetail.fee_rel)
+        .joinedload(Fee.subject_detail)
+        .joinedload(SubjectDetail.subject),
+        joinedload(Registration.details)
+        .joinedload(RegistrationDetail.fee_rel)
+        .joinedload(Fee.subject_detail)
+        .joinedload(SubjectDetail.level),
+    ).filter(Registration.registration_id == registration_id).first()
+
+    if not obj:
+        raise NotFoundException("ຂໍ້ມູນການລົງທະບຽນ")
+
+    selected_fees: list[RegistrationReceiptFeeItem] = []
+    tuition_fee = Decimal('0')
+
+    for detail in obj.details or []:
+        fee = detail.fee_rel
+        if fee is None:
+            continue
+
+        tuition_fee += fee.fee or Decimal('0')
+        subject_detail = fee.subject_detail
+        subject_name = '-'
+        level_name = '-'
+
+        if subject_detail is not None:
+            if subject_detail.subject is not None:
+                subject_name = subject_detail.subject.subject_name
+            if subject_detail.level is not None:
+                level_name = subject_detail.level.level_name
+
+        selected_fees.append(
+            RegistrationReceiptFeeItem(
+                subject_name=subject_name,
+                level_name=level_name,
+                fee=fee.fee,
+            )
+        )
+
+    discount_amount = obj.total_amount - obj.final_amount
+    if discount_amount < 0:
+        discount_amount = Decimal('0')
+
+    student_name = (
+        f"{obj.student.student_name} {obj.student.student_lastname}".strip()
+        if obj.student is not None
+        else obj.registration_id
+    )
+
+    return RegistrationReceiptRequest(
+        registration_id=obj.registration_id,
+        registration_date=obj.registration_date,
+        student_name=student_name,
+        selected_fees=selected_fees,
+        tuition_fee=tuition_fee,
+        total_fee=obj.total_amount,
+        discount_amount=discount_amount,
+        net_fee=obj.final_amount,
+    )
 
 
 def find_existing_registration_for_academic_year(db: Session, student_id: str, academic_id: str) -> Registration:

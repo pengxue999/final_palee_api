@@ -38,6 +38,23 @@ def get_registration(registration_id: str, db: Session = Depends(get_db)):
     )
 
 
+@router.get("/{registration_id}/receipt-pdf")
+def get_registration_receipt_pdf(
+    registration_id: str,
+    db: Session = Depends(get_db),
+):
+    receipt_data = svc.build_receipt_request(db, registration_id)
+    pdf_bytes = receipt_pdf_svc.build_registration_receipt_pdf(receipt_data)
+    filename = f'registration_{registration_id}.pdf'
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
 @router.post("")
 def create_registration(data: RegistrationCreate, db: Session = Depends(get_db)):
     item = svc.create(db, data)

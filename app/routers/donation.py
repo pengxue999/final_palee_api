@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from app.configs.database import get_db
 from app.schemas.donation import DonationCreate, DonationUpdate, DonationResponse
 from app.configs.response import success_response
 from app.services import donation as svc
+from app.services import receipt_pdf as receipt_pdf_svc
 
 router = APIRouter(prefix="/donations", tags=["ການບໍລິຈາກ"])
 
@@ -22,6 +23,20 @@ def get_donation(donation_id: int, db: Session = Depends(get_db)):
     return success_response(
         DonationResponse.model_validate(svc.get_by_id(db, donation_id)),
         "ດຶງຂໍ້ມູນການບໍລິຈາກສຳເລັດ"
+    )
+
+
+@router.get("/{donation_id}/certificate-pdf")
+def get_donation_certificate_pdf(donation_id: int, db: Session = Depends(get_db)):
+    donation = svc.get_by_id(db, donation_id)
+    pdf_bytes = receipt_pdf_svc.build_donation_certificate_pdf(donation)
+    filename = f'donation_certificate_{donation_id}.pdf'
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
     )
 
 

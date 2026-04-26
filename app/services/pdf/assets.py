@@ -1,5 +1,6 @@
 from base64 import b64encode
 from functools import lru_cache
+from mimetypes import guess_type
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -8,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 TEMPLATE_DIR = PROJECT_ROOT / "app" / "templates"
 BROWSER_DIR = PROJECT_ROOT / ".playwright-browsers"
 FONT_DIR = PROJECT_ROOT / "assets" / "fonts"
+IMAGE_DIR = PROJECT_ROOT / "assets" / "images"
 
 
 def resolve_font_paths() -> tuple[Path, Path]:
@@ -31,6 +33,18 @@ def font_data_urls() -> tuple[str, str]:
         f"data:font/ttf;base64,{regular_bytes}",
         f"data:font/ttf;base64,{bold_bytes}",
     )
+
+
+@lru_cache(maxsize=16)
+def image_data_url(image_name: str) -> str:
+    image_path = IMAGE_DIR / image_name
+
+    if not image_path.exists():
+        raise FileNotFoundError(f"Image asset not found: {image_path}")
+
+    mime_type = guess_type(image_path.name)[0] or "application/octet-stream"
+    image_bytes = b64encode(image_path.read_bytes()).decode("ascii")
+    return f"data:{mime_type};base64,{image_bytes}"
 
 
 @lru_cache(maxsize=1)

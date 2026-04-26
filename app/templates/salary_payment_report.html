@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_regular_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: "ReportLao";
+        src: url("{{ font_bold_url }}") format("truetype");
+        font-style: normal;
+        font-weight: 700;
+      }
+
+      :root {
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #d1d5db;
+        --line-soft: #e5e7eb;
+        --panel: #faf5ff;
+        --panel-strong: #f3e8ff;
+        --header-fill: #f5f3ff;
+        --row-alt: #fcfcfd;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font-family: "ReportLao", sans-serif;
+        font-size: 12px;
+      }
+
+      .page {
+        width: 100%;
+        padding: 4mm 12mm 10mm;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      .brand-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .brand-subtitle {
+        margin: 4px 0 0;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .date-box {
+        min-width: 176px;
+        text-align: right;
+      }
+
+      .date-label {
+        margin: 0;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .date-value {
+        margin: 6px 0 0;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .title-block {
+        padding: 18px 0 14px;
+      }
+
+      .report-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .report-subtitle {
+        margin: 7px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-card {
+        background: linear-gradient(180deg, #ffffff 0%, var(--panel) 100%);
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        padding: 13px 14px;
+      }
+
+      .summary-label {
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .summary-value {
+        margin-top: 7px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .filter-panel {
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: var(--panel-strong);
+        border-radius: 10px;
+      }
+
+      .filter-title {
+        margin: 0 0 9px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        padding: 6px 12px;
+        border: 1px solid #d8b4fe;
+        background: #ffffff;
+        color: #4c1d95;
+        font-size: 11px;
+        border-radius: 999px;
+      }
+
+      .table-wrap {
+        margin-top: 14px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+      tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 8px;
+        vertical-align: middle;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      th {
+        background: var(--header-fill);
+        color: #374151;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      tbody tr:nth-child(even) {
+        background: var(--row-alt);
+      }
+
+      tbody td {
+        font-size: 11px;
+        line-height: 1.28;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+      .text-strong {
+        font-weight: 600;
+      }
+
+      .empty-state {
+        margin-top: 16px;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        padding: 28px 16px;
+        text-align: center;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div>
+          <h1 class="brand-title">ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ</h1>
+          <p class="brand-subtitle">Palee Elite Training Center</p>
+        </div>
+        <div class="date-box">
+          <p class="date-label">ວັນທີພິມ</p>
+          <p class="date-value">{{ generated_at }}</p>
+        </div>
+      </header>
+
+      <section class="title-block">
+        <h2 class="report-title">ລາຍງານເບີກຈ່າຍເງິນສອນ</h2>
+        <p class="report-subtitle">
+          ສະຫຼຸບລາຍການການຈ່າຍເງິນສອນຕາມເງື່ອນໄຂທີ່ເລືອກ
+        </p>
+      </section>
+
+      <section class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">ລາຍການທັງໝົດ</div>
+          <div class="summary-value">{{ total_count }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ມູນຄ່າລວມ</div>
+          <div class="summary-value">{{ total_amount }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ຈ່າຍແລ້ວ</div>
+          <div class="summary-value">{{ paid_count }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ຄ້າງຈ່າຍ</div>
+          <div class="summary-value">{{ pending_count }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">ຈຳນວນອາຈານ</div>
+          <div class="summary-value">{{ unique_teacher_count }}</div>
+        </div>
+      </section>
+
+      {% if filter_items %}
+      <section class="filter-panel">
+        <p class="filter-title">ຕົວກອງທີ່ນຳໃຊ້</p>
+        <div class="filters">
+          {% for item in filter_items %}
+          <span class="chip">{{ item }}</span>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %} {% if payments %}
+      <section class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 14%">ລະຫັດ</th>
+              <th style="width: 22%">ອາຈານ</th>
+              <th style="width: 14%">ວັນທີຈ່າຍ</th>
+              <th style="width: 14%">ຈຳນວນເງິນ</th>
+              <th style="width: 10%">ສະຖານະ</th>
+              <th style="width: 12%">ຜູ້ອະນຸມັດ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+            <tr>
+              <td class="text-center text-strong">
+                {{ payment.salary_payment_id }}
+              </td>
+              <td class="text-center">{{ payment.teacher_name }}</td>
+              <td class="text-center">{{ payment.payment_date_display }}</td>
+              <td class="text-center text-strong">
+                {{ payment.amount_display }}
+              </td>
+              <td class="text-center">{{ payment.status }}</td>
+              <td class="text-center">{{ payment.user_name }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% else %}
+      <div class="empty-state">ບໍ່ພົບຂໍ້ມູນຕາມເງື່ອນໄຂທີ່ເລືອກ</div>
+      {% endif %}
+    </div>
+  </body>
+</html>

@@ -15,6 +15,10 @@ from app.services.reporting.student import (
     get_student_report,
     get_student_summary,
 )
+from app.services.reporting.salary_payment import (
+    export_salary_payment_report,
+    get_salary_payment_report,
+)
 from app.services.reporting.teacher_attendance import (
     export_teacher_attendance_report,
     get_teacher_attendance_report,
@@ -27,12 +31,14 @@ __all__ = [
     "export_finance_report",
     "export_popular_subject_level_detail_report",
     "export_popular_subjects_report",
+    "export_salary_payment_report",
     "export_student_report",
     "export_teacher_attendance_report",
     "get_donation_report",
     "get_finance_report",
     "get_popular_subject_level_detail_report",
     "get_popular_subjects_report",
+    "get_salary_payment_report",
     "get_student_report",
     "get_student_summary",
     "get_teacher_attendance_report",
