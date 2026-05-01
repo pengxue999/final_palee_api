@@ -30,13 +30,9 @@ def get_donation(donation_id: int, db: Session = Depends(get_db)):
 def get_donation_certificate_pdf(donation_id: int, db: Session = Depends(get_db)):
     donation = svc.get_by_id(db, donation_id)
     pdf_bytes = receipt_pdf_svc.build_donation_certificate_pdf(donation)
-    filename = f'donation_certificate_{donation_id}.pdf'
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 

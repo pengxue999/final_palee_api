@@ -72,13 +72,9 @@ def assessment_results_report_pdf(
         ranking=ranking,
     )
     pdf_bytes = receipt_pdf_svc.build_assessment_report_pdf(report_data)
-    filename = "assessment_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -172,13 +168,9 @@ def student_report_pdf(
         gender=gender,
     )
     pdf_bytes = receipt_pdf_svc.build_student_report_pdf(report_data)
-    filename = "student_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -264,13 +256,9 @@ def teacher_attendance_report_pdf(
         teacher_id=teacher_id,
     )
     pdf_bytes = receipt_pdf_svc.build_teacher_attendance_report_pdf(report_data)
-    filename = "teacher_attendance_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -322,13 +310,9 @@ def salary_payment_report_pdf(
         status=status,
     )
     pdf_bytes = receipt_pdf_svc.build_salary_payment_report_pdf(report_data)
-    filename = "salary_payment_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -386,13 +370,9 @@ def finance_report_pdf(
         year=year,
     )
     pdf_bytes = receipt_pdf_svc.build_finance_report_pdf(report_data, tab=tab)
-    filename = f"finance_report_{tab}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -439,13 +419,9 @@ def popular_subjects_report_pdf(
         academic_id=academic_id,
     )
     pdf_bytes = receipt_pdf_svc.build_popular_subjects_report_pdf(report_data)
-    filename = "popular_subjects_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -485,13 +461,9 @@ def popular_subject_level_detail_report_pdf(
         academic_id=academic_id,
     )
     pdf_bytes = receipt_pdf_svc.build_popular_subject_level_report_pdf(report_data)
-    filename = "popular_subject_level_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -527,11 +499,7 @@ def donation_report_pdf(
         year=year,
     )
     pdf_bytes = receipt_pdf_svc.build_donation_report_pdf(report_data)
-    filename = "donation_report.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )

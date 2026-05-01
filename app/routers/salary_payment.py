@@ -99,13 +99,9 @@ def get_one(payment_id: str, db: Session = Depends(get_db)):
 def get_receipt_pdf(payment_id: str, db: Session = Depends(get_db)):
     receipt_data = svc.build_receipt_request(db, payment_id)
     pdf_bytes = receipt_pdf_svc.build_salary_payment_receipt_pdf(receipt_data)
-    filename = f'salary_payment_{payment_id}.pdf'
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 

@@ -45,13 +45,9 @@ def get_registration_receipt_pdf(
 ):
     receipt_data = svc.build_receipt_request(db, registration_id)
     pdf_bytes = receipt_pdf_svc.build_registration_receipt_pdf(receipt_data)
-    filename = f'registration_{registration_id}.pdf'
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 
@@ -77,13 +73,9 @@ def create_bulk_registration(data: RegistrationBulkCreate, db: Session = Depends
 @router.post("/receipt-pdf")
 def create_registration_receipt_pdf(data: RegistrationReceiptRequest):
     pdf_bytes = receipt_pdf_svc.build_registration_receipt_pdf(data)
-    filename = f'registration_{data.registration_id}.pdf'
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
     )
 
 

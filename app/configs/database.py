@@ -7,10 +7,10 @@ from sqlalchemy.sql import text
 
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "99999999")
+DB_HOST = os.getenv("DB_HOST", "gateway01.ap-southeast-1.prod.aws.tidbcloud.com")
+DB_PORT = os.getenv("DB_PORT", "4000")
+DB_USER = os.getenv("DB_USER", "4YeW7yoXjiqC5uP.root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "xYlUfJutBf3wvcyM")
 DB_NAME = os.getenv("DB_NAME", "palee_elite_training_center")
 DATABASE_URL = os.getenv("DATABASE_URL")
 DB_SSL_ENABLED = os.getenv("DB_SSL_ENABLED", "").lower()
