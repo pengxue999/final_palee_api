@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
+from app.models.donation_category import DonationCategory
 from app.models.donor import Donor
 from app.models.donation import Donation
 from app.models.income import Income
@@ -7,7 +8,7 @@ from app.schemas.donation import (
     DonationCreate, DonationUpdate,
 )
 from app.configs.exceptions import NotFoundException
-from app.utils.donation_category import is_cash_donation_name, normalize_donation_category_name
+from app.utils.donation_category import is_cash_donation_name
 
 
 def _build_income_description(donor: Donor | None, donation_name: str) -> str:
@@ -50,21 +51,34 @@ def _delete_income_record(db: Session, donation_id: int) -> None:
 
 
 def _is_cash_donation_name_for_obj(donation: Donation) -> bool:
-    return is_cash_donation_name(donation.donation_category)
+    category_name = (
+        donation.donation_category.donation_category_name
+        if donation.donation_category is not None
+        else None
+    )
+    return is_cash_donation_name(category_name)
+
+
+def _ensure_donation_category_exists(db: Session, donation_category_id: int) -> None:
+    category = db.query(DonationCategory).filter(
+        DonationCategory.donation_category_id == donation_category_id
+    ).first()
+    if not category:
+        raise NotFoundException("ຂໍ້ມູນປະເພດການບໍລິຈາກ")
 
 
 
 def get_all(db: Session):
     return db.query(Donation).options(
         joinedload(Donation.donor),
-        joinedload(Donation.unit)
+        joinedload(Donation.donation_category)
     ).all()
 
 
 def get_by_id(db: Session, donation_id: int) -> Donation:
     obj = db.query(Donation).options(
         joinedload(Donation.donor),
-        joinedload(Donation.unit)
+        joinedload(Donation.donation_category)
     ).filter(Donation.donation_id == donation_id).first()
     if not obj:
         raise NotFoundException("ຂໍ້ມູນການບໍລິຈາກ")
@@ -72,14 +86,15 @@ def get_by_id(db: Session, donation_id: int) -> Donation:
 
 
 def create(db: Session, data: DonationCreate):
+    _ensure_donation_category_exists(db, data.donation_category_id)
     payload = data.model_dump()
-    payload["donation_category"] = normalize_donation_category_name(data.donation_category)
+    payload["unit"] = data.unit.strip()
     obj = Donation(**payload)
     db.add(obj)
     db.commit()
     db.refresh(obj)
 
-    if is_cash_donation_name(obj.donation_category):
+    if _is_cash_donation_name_for_obj(get_by_id(db, obj.donation_id)):
         _sync_income_record(db, obj)
         db.commit()
 
@@ -91,10 +106,10 @@ def update(db: Session, donation_id: int, data: DonationUpdate):
     old_is_cash = _is_cash_donation_name_for_obj(obj)
 
     update_data = data.model_dump(exclude_none=True)
-    if data.donation_category is not None:
-        update_data["donation_category"] = normalize_donation_category_name(
-            data.donation_category
-        )
+    if data.donation_category_id is not None:
+        _ensure_donation_category_exists(db, data.donation_category_id)
+    if data.unit is not None:
+        update_data["unit"] = data.unit.strip()
 
     for field, value in update_data.items():
         setattr(obj, field, value)

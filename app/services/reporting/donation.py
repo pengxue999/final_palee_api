@@ -7,9 +7,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.donation_category import DonationCategory
 from app.models.donation import Donation
 from app.models.donor import Donor
-from app.utils.donation_category import is_cash_donation_name, normalize_donation_category_name
+from app.utils.donation_category import is_cash_donation_name
 from app.services.reporting.common import (
     create_csv_writer,
     current_timestamp,
@@ -32,20 +33,22 @@ def get_donation_report(
             donor_name = f"{donor.donor_name} {donor.donor_lastname}".strip()
 
     selected_category_name = (
-        normalize_donation_category_name(donation_category)
+        (donation_category or "").strip()
         if donation_category
         else None
     )
 
     query = db.query(Donation).options(
         joinedload(Donation.donor),
-        joinedload(Donation.unit),
+        joinedload(Donation.donation_category),
     )
 
     if donor_id:
         query = query.filter(Donation.donor_id == donor_id)
     if selected_category_name:
-        query = query.filter(Donation.donation_category == selected_category_name)
+        query = query.join(Donation.donation_category).filter(
+            DonationCategory.donation_category_name == selected_category_name
+        )
     if year:
         query = query.filter(Donation.donation_date.isnot(None))
         query = query.filter(Donation.donation_date >= datetime(year, 1, 1).date())
@@ -60,7 +63,11 @@ def get_donation_report(
 
     for donation in donations:
         amount = Decimal(donation.amount or 0)
-        category_name = normalize_donation_category_name(donation.donation_category)
+        category_name = (
+            donation.donation_category.donation_category_name
+            if donation.donation_category is not None
+            else "-"
+        )
         is_cash = is_cash_donation_name(category_name)
 
         if is_cash:
@@ -80,8 +87,7 @@ def get_donation_report(
                 "donation_name": donation.donation_name,
                 "amount": float(amount),
                 "amount_display": f"{int(amount):,}" if is_cash else f"{float(amount):,.0f}",
-                "unit": donation.unit.unit_name if donation.unit else "-",
-                "description": donation.description or "-",
+                "unit": donation.unit or "-",
                 "donation_date": donation.donation_date.strftime("%d-%m-%Y")
                 if donation.donation_date
                 else "-",
@@ -136,7 +142,6 @@ def export_donation_report(
                 "ຈຳນວນ / ມູນຄ່າ",
                 "ຫົວໜ່ວຍ",
                 "ວັນທີບໍລິຈາກ",
-                "ລາຍລະອຽດ",
             ]
         )
         for item in donations:
@@ -149,7 +154,6 @@ def export_donation_report(
                     item["amount_display"],
                     item["unit"],
                     item["donation_date"],
-                    item["description"],
                 ]
             )
 
@@ -170,7 +174,7 @@ def export_donation_report(
         bottom=Side(style="thin", color="D1D5DB"),
     )
 
-    sheet.merge_cells("A1:H1")
+    sheet.merge_cells("A1:G1")
     title_cell = sheet["A1"]
     title_cell.value = "ລາຍງານການບໍລິຈາກ"
     title_cell.font = Font(name="Noto Sans Lao", size=16, bold=True, color="FFFFFF")
@@ -202,7 +206,6 @@ def export_donation_report(
         "ຈຳນວນ / ມູນຄ່າ",
         "ຫົວໜ່ວຍ",
         "ວັນທີບໍລິຈາກ",
-        "ລາຍລະອຽດ",
     ]
     for column_index, header in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column_index, value=header)
@@ -220,7 +223,6 @@ def export_donation_report(
             item["amount_display"],
             item["unit"],
             item["donation_date"],
-            item["description"],
         ]
         for column_index, value in enumerate(values, start=1):
             cell = sheet.cell(row=row_index, column=column_index, value=value)
@@ -229,7 +231,7 @@ def export_donation_report(
             cell.alignment = Alignment(vertical="top", wrap_text=True)
 
     sheet.freeze_panes = f"A{header_row + 1}"
-    sheet.auto_filter.ref = f"A{header_row}:H{max(header_row, header_row + len(donations))}"
+    sheet.auto_filter.ref = f"A{header_row}:G{max(header_row, header_row + len(donations))}"
     for column_name, width in {
         "A": 12,
         "B": 26,
@@ -238,7 +240,6 @@ def export_donation_report(
         "E": 16,
         "F": 14,
         "G": 14,
-        "H": 30,
     }.items():
         sheet.column_dimensions[column_name].width = width
 

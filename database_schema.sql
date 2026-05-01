@@ -118,7 +118,7 @@ CREATE TABLE discount (
   academic_id          char(5)        NOT NULL,
   discount_amount      DECIMAL(10, 2) NOT NULL,
   discount_description ENUM(
-    'ຮຽນ3ວິຊາຂື້ນໄປ(ສະເພາະສາຍຄິດໄລ່)',
+    'ຮຽນ3ວິຊາຂື້ນໄປ',
     'ລົງທະບຽນຮຽນຊ້າ'
   )                                   NOT NULL,
   PRIMARY KEY (discount_id),
@@ -360,11 +360,11 @@ CREATE TABLE donor (
 -- -----------------------------------------------------
 -- 27. ຫົວໜ່ວຍ
 -- -----------------------------------------------------
-CREATE TABLE unit (
-  unit_id   INT(11)     NOT NULL AUTO_INCREMENT,
-  unit_name VARCHAR(30) NOT NULL,
-  PRIMARY KEY (unit_id),
-  UNIQUE KEY uq_unit_name (unit_name)
+CREATE TABLE donation_category (
+  donation_category_id   INT(11)     NOT NULL AUTO_INCREMENT,
+  donation_category_name VARCHAR(30) NOT NULL,
+  PRIMARY KEY (donation_category_id),
+  UNIQUE KEY uq_donation_category_name (donation_category_name)
 ) ENGINE = InnoDB;
 
 -- -----------------------------------------------------
@@ -373,16 +373,15 @@ CREATE TABLE unit (
 CREATE TABLE donation (
   donation_id          INT(11)        NOT NULL AUTO_INCREMENT,
   donor_id             CHAR(5)        NOT NULL,
-  donation_category    VARCHAR(30)    NOT NULL,
+  donation_category_id INT(11)        NOT NULL,
   donation_name        VARCHAR(30)    NOT NULL,
   amount               DECIMAL(10, 2) NOT NULL,
-  unit_id              INT(11)        NOT NULL,
-  description          VARCHAR(255)   DEFAULT NULL,
+  unit                 VARCHAR(30)    NOT NULL,
   donation_date        DATE           NOT NULL,
   PRIMARY KEY (donation_id),
   FOREIGN KEY (donor_id)             REFERENCES donor             (donor_id)
     ON DELETE RESTRICT ON UPDATE CASCADE,
-  FOREIGN KEY (unit_id)              REFERENCES unit              (unit_id)
+  FOREIGN KEY (donation_category_id) REFERENCES donation_category (donation_category_id)
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 

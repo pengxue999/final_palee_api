@@ -16,7 +16,12 @@ def _format_amount(value: Decimal, unit_name: str | None) -> str:
 def build_donation_certificate_context(donation: Donation) -> dict[str, object]:
     regular_font_url, bold_font_url = font_data_urls()
     donor_name = "ຜູ້ບໍລິຈາກ"
-    is_cash_donation = is_cash_donation_name(donation.donation_category)
+    category_name = (
+        donation.donation_category.donation_category_name
+        if donation.donation_category is not None
+        else ""
+    )
+    is_cash_donation = is_cash_donation_name(category_name)
 
     if donation.donor is not None:
         donor_name = (
@@ -34,15 +39,11 @@ def build_donation_certificate_context(donation: Donation) -> dict[str, object]:
         "donor_name": donor_name,
         "donor_section": (donation.donor.section if donation.donor else None) or "",
         "donation_name": donation.donation_name,
-        "donation_category": donation.donation_category,
+        "donation_category": category_name,
         "donation_amount_label": "ລວມມູນຄ່າ" if is_cash_donation else "ຈຳນວນ",
-        "amount_text": _format_amount(
-            donation.amount,
-            donation.unit.unit_name if donation.unit else None,
-        ),
+        "amount_text": _format_amount(donation.amount, donation.unit),
         "certificate_number": "",
         "issue_date": format_date(date.today()),
         "donation_date": format_date(donation.donation_date),
-        "description": (donation.description or "").strip(),
         "donation_id": donation.donation_id,
     }

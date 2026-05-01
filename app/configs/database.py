@@ -7,12 +7,12 @@ from sqlalchemy.sql import text
 
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "gateway01.ap-southeast-1.prod.aws.tidbcloud.com")
-DB_PORT = os.getenv("DB_PORT", "4000")
-DB_USER = os.getenv("DB_USER", "4YeW7yoXjiqC5uP.root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "xYlUfJutBf3wvcyM")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "palee_elite_training_center")
-DATABASE_URL = os.getenv("DATABASE_URL")
+_DATABASE_URL_FROM_ENV = os.getenv("DATABASE_URL")
 DB_SSL_ENABLED = os.getenv("DB_SSL_ENABLED", "").lower()
 DB_SSL_CA = os.getenv("DB_SSL_CA")
 DEFAULT_CA_BUNDLE_PATHS = (
@@ -33,8 +33,8 @@ def _should_use_ssl() -> bool:
 
 
 def _build_database_url() -> str:
-    if DATABASE_URL:
-        return DATABASE_URL
+    if _DATABASE_URL_FROM_ENV:
+        return _DATABASE_URL_FROM_ENV
 
     return (
         f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
@@ -66,7 +66,7 @@ def _build_connect_args() -> dict:
 
     return {"ssl": ssl_context}
 
-DATABASE_URL = _build_database_url()
+DATABASE_URL: str = _build_database_url()
 
 engine = create_engine(
     DATABASE_URL,

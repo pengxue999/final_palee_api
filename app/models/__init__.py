@@ -22,7 +22,7 @@ from app.models.expense_category import ExpenseCategory
 from app.models.expense import Expense
 from app.models.income import Income
 from app.models.donor import Donor
-from app.models.unit import Unit
+from app.models.donation_category import DonationCategory
 from app.models.donation import Donation
 
 __all__ = [
@@ -30,5 +30,5 @@ __all__ = [
     "Level", "SubjectDetail", "Fee", "Discount", "User", "Teacher", "TeacherAssignment",
     "TeachingLog", "SalaryPayment", "Student", "Registration",
     "RegistrationDetail", "TuitionPayment", "Evaluation", "EvaluationDetail",
-    "ExpenseCategory", "Expense", "Income", "Donor", "Unit", "Donation",
+    "ExpenseCategory", "Expense", "Income", "Donor", "DonationCategory", "Donation",
 ]
