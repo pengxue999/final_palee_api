@@ -27,7 +27,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "role": user.role,
     })
 
-    teacher_id = user.user_name if user.role == 'teacher' else None
+    teacher_id = user.user_name if str(user.role).upper() == 'TEACHER' else None
 
     return TokenResponse(
         access_token=token,

@@ -83,7 +83,7 @@ class RegistrationResponse(BaseModel):
         if hasattr(status_value, 'value'):
             status_value = status_value.value
         elif status_value == '' or status_value is None:
-            status_value = 'ຍັງບໍ່ທັນຈ່າຍ'
+            status_value = RegistrationStatusEnum.UNPAID.value
 
         return cls(
             registration_id=obj.registration_id,

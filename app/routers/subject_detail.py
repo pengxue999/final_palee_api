@@ -31,16 +31,11 @@ def get_subject_detail(subject_detail_id: str, db: Session = Depends(get_db)):
 
 @router.post("")
 def create_subject_detail(subject_detail: SubjectDetailCreate, db: Session = Depends(get_db)):
-    try:
-        created_subject_detail = svc.create(db, subject_detail)
-        return success_response(
-            SubjectDetailResponse.model_validate(created_subject_detail),
-            "ບັນທຶກລາຍລະອຽດວິຊາສຳເລັດ", 201
-        )
-    except Exception as e:
-        if "ບໍ່ພົບຂໍ້ມູນ" in str(e):
-            return error_response("NOT_FOUND", str(e), 404)
-        return error_response("VALIDATION_ERROR", str(e), 400)
+    created_subject_detail = svc.create(db, subject_detail)
+    return success_response(
+        SubjectDetailResponse.model_validate(created_subject_detail),
+        "ບັນທຶກລາຍລະອຽດວິຊາສຳເລັດ", 201
+    )
 
 @router.put("/{subject_detail_id}")
 def update_subject_detail(subject_detail_id: str, subject_detail: SubjectDetailUpdate, db: Session = Depends(get_db)):

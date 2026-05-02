@@ -25,13 +25,9 @@ from app.services.reporting.common import (
 def _round_label(semester: str) -> str:
     if semester.lower() in {'all', 'all_semesters'}:
         return "ທັງໝົດ"
-    if semester == 'Semester 1':
+    if semester == SemesterEnum.MIDTERM.value:
         return "ກາງພາກ"
-    if semester == 'Semester 2':
-        return "ທ້າຍພາກ"
-    if semester == SemesterEnum.SEMESTER_1.value:
-        return "ກາງພາກ"
-    if semester == SemesterEnum.SEMESTER_2.value:
+    if semester == SemesterEnum.FINAL.value:
         return "ທ້າຍພາກ"
     return semester
 

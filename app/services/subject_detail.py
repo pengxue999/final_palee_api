@@ -4,7 +4,7 @@ from app.models.subject_detail import SubjectDetail
 from app.models.subject import Subject
 from app.models.level import Level
 from app.schemas.subject_detail import SubjectDetailCreate, SubjectDetailUpdate
-from app.configs.exceptions import NotFoundException, ForeignKeyConstraintException
+from app.configs.exceptions import ConflictException, NotFoundException, ForeignKeyConstraintException
 
 
 def _generate_subject_detail_id(db: Session) -> str:
@@ -54,7 +54,7 @@ def create(db: Session, subject_detail_data: SubjectDetailCreate) -> SubjectDeta
         SubjectDetail.level_id == subject_detail_data.level_id
     ).first()
     if existing:
-        raise NotFoundException("ວິຊານີ້ຖືກກຳນົດໃຫ້ຂັ້ນຊັ້ນນີ້ແລ້ວ")
+        raise ConflictException("ວິຊານີ້ຖືກກຳນົດແລ້ວ")
 
     try:
         subject_detail_id = _generate_subject_detail_id(db)
@@ -67,8 +67,11 @@ def create(db: Session, subject_detail_data: SubjectDetailCreate) -> SubjectDeta
         db.commit()
         db.refresh(db_obj)
         return get_by_id(db, subject_detail_id)
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
+        error_message = str(exc.orig) if getattr(exc, "orig", None) else str(exc)
+        if "uq_subject_level" in error_message or "Duplicate entry" in error_message:
+            raise ConflictException("ວິຊານີ້ຖືກກຳນົດແລ້ວ")
         raise ForeignKeyConstraintException(
             "ບໍ່ສາມາດເພີ່ມລາຍລະອຽດວິຊານີ້ໄດ້ ເນື່ອງຈາກມີຂໍ້ມູນທີ່ເຊື່ອມໂຍງກັນ"
         )

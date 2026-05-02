@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.configs.database import get_db
-from app.schemas.teacher_assignment import TeacherAssignmentCreate, TeacherAssignmentUpdate, TeacherAssignmentResponse
+from app.schemas.teacher_assignment import (
+    TeacherAssignmentBatchCreate,
+    TeacherAssignmentCreate,
+    TeacherAssignmentResponse,
+    TeacherAssignmentUpdate,
+)
 from app.configs.response import success_response
 from app.services import teacher_assignment as svc
 
@@ -39,6 +44,16 @@ def create(data: TeacherAssignmentCreate, db: Session = Depends(get_db)):
     return success_response(
         TeacherAssignmentResponse.model_validate(svc.create(db, data)),
         "ບັນທຶກການມອບໝາຍອາຈານສຳເລັດ", 201
+    )
+
+
+@router.post("/batch")
+def create_many(data: TeacherAssignmentBatchCreate, db: Session = Depends(get_db)):
+    created = svc.create_many(db, data)
+    return success_response(
+        [TeacherAssignmentResponse.model_validate(item) for item in created],
+        "ບັນທຶກການມອບໝາຍອາຈານຫຼາຍລາຍການສຳເລັດ",
+        201,
     )
 
 

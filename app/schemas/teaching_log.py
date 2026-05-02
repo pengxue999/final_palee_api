@@ -17,16 +17,14 @@ class TeachingLogCreate(BaseModel):
     assignment_id: str
     substitute_for_assignment_id: Optional[str] = None
     hourly: Decimal
-    remark: Optional[str] = None
-    status: Optional[Literal['ຂຶ້ນສອນ', 'ຂາດສອນ']] = None
+    status: Optional[Literal['TEACHING', 'ABSENT']] = None
 
 
 class TeachingLogUpdate(BaseModel):
     assignment_id: Optional[str] = None
     substitute_for_assignment_id: Optional[str] = None
     hourly: Optional[Decimal] = None
-    remark: Optional[str] = None
-    status: Optional[Literal['ຂຶ້ນສອນ', 'ຂາດສອນ']] = None
+    status: Optional[Literal['TEACHING', 'ABSENT']] = None
 
 
 class TeachingLogResponse(BaseModel):
@@ -41,7 +39,6 @@ class TeachingLogResponse(BaseModel):
     teaching_date: Optional[datetime] = None
     hourly: Decimal
     hourly_rate: Decimal
-    remark: Optional[str] = None
     status: Optional[str] = None
     substitute_for_assignment_id: Optional[str] = None
     substitute_for_teacher_id: Optional[str] = None
@@ -84,7 +81,6 @@ class TeachingLogResponse(BaseModel):
             teaching_date=teaching_date,
             hourly=obj.hourly,
             hourly_rate=assignment.hourly_rate,
-            remark=obj.remark,
             status=obj.status,
             substitute_for_assignment_id=obj.substitute_for_assignment_id,
             substitute_for_teacher_id=sub_teacher_id,

@@ -28,13 +28,10 @@ def get_by_id(db: Session, discount_id: str) -> Discount:
 
 
 def create(db: Session, data: DiscountCreate):
-    print(f"DEBUG - Input data: {data}")
-    print(f"DEBUG - discount_description: {data.discount_description}")
     desc_enum = DiscountDescriptionEnum(data.discount_description)
-    print(f"DEBUG - enum object: {desc_enum}, value: {desc_enum.value}")
     existing = db.query(Discount).filter(
         Discount.academic_id == data.academic_id,
-        Discount.discount_description == desc_enum,
+        Discount.discount_description == desc_enum.value,
     ).first()
     if existing:
         raise ConflictException("ສ່ວນຫຼຸດນີ້ມີຢູ່ແລ້ວໃນສົກຮຽນນີ້")
@@ -45,7 +42,6 @@ def create(db: Session, data: DiscountCreate):
         discount_amount=data.discount_amount,
         discount_description=desc_enum.value
     )
-    print(f"DEBUG - Discount obj before save: discount_id={obj.discount_id}, description={obj.discount_description} (type={type(obj.discount_description)})")
     db.add(obj)
     try:
         db.commit()
@@ -53,8 +49,24 @@ def create(db: Session, data: DiscountCreate):
         db.rollback()
         raise ConflictException("ສ່ວນຫຼຸດນີ້ມີຢູ່ແລ້ວໃນສົກຮຽນນີ້")
     db.refresh(obj)
-    print(f"DEBUG - After refresh: description={obj.discount_description}, type={type(obj.discount_description)}")
     return obj
+
+
+def _ensure_unique_discount(
+    db: Session,
+    academic_id: str,
+    discount_description: str,
+    *,
+    exclude_discount_id: str | None = None,
+):
+    query = db.query(Discount).filter(
+        Discount.academic_id == academic_id,
+        Discount.discount_description == discount_description,
+    )
+    if exclude_discount_id is not None:
+        query = query.filter(Discount.discount_id != exclude_discount_id)
+    if query.first():
+        raise ConflictException("ສ່ວນຫຼຸດນີ້ມີຢູ່ແລ້ວໃນສົກຮຽນນີ້")
 
 
 def update(db: Session, discount_id: str, data: DiscountUpdate):
@@ -62,9 +74,26 @@ def update(db: Session, discount_id: str, data: DiscountUpdate):
     update_data = data.model_dump(exclude_none=True)
     if 'discount_description' in update_data:
         update_data['discount_description'] = DiscountDescriptionEnum(update_data['discount_description']).value
+
+    next_academic_id = update_data.get('academic_id', obj.academic_id)
+    next_discount_description = update_data.get(
+        'discount_description',
+        obj.discount_description,
+    )
+    _ensure_unique_discount(
+        db,
+        next_academic_id,
+        next_discount_description,
+        exclude_discount_id=discount_id,
+    )
+
     for field, value in update_data.items():
         setattr(obj, field, value)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ConflictException("ສ່ວນຫຼຸດນີ້ມີຢູ່ແລ້ວໃນສົກຮຽນນີ້")
     db.refresh(obj)
     return obj
 

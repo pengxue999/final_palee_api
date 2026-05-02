@@ -201,9 +201,8 @@
             <td>{{ item.subject_name }}</td>
             <td class="text-center">{{ item.level_name }}</td>
             <td class="text-center">
-              {% if item.semester == 'Semester 1' %} ກາງພາກ {% elif
-              item.semester == 'Semester 2' %} ທ້າຍພາກ {% else %} {{
-              item.semester }} {% endif %}
+              {% if item.semester == 'MIDTERM' %} ກາງພາກ {% elif item.semester
+              == 'FINAL' %} ທ້າຍພາກ {% else %} {{ item.semester }} {% endif %}
             </td>
             <td class="text-center">{{ item.score_display }}</td>
             <td class="text-center">{{ item.ranking }}</td>

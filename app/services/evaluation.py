@@ -51,20 +51,10 @@ def _generate_evaluation_id(db: Session) -> str:
 
 def _parse_semester(semester: str) -> SemesterEnum:
     aliases = {
-        SemesterEnum.SEMESTER_1.value: SemesterEnum.SEMESTER_1,
-        SemesterEnum.SEMESTER_2.value: SemesterEnum.SEMESTER_2,
-        'semester 1': SemesterEnum.SEMESTER_1,
-        'semester_1': SemesterEnum.SEMESTER_1,
-        '1': SemesterEnum.SEMESTER_1,
-        'ພາກຮຽນ 1': SemesterEnum.SEMESTER_1,
-        'ກາງພາກ': SemesterEnum.SEMESTER_1,
-        'midterm': SemesterEnum.SEMESTER_1,
-        'semester 2': SemesterEnum.SEMESTER_2,
-        'semester_2': SemesterEnum.SEMESTER_2,
-        '2': SemesterEnum.SEMESTER_2,
-        'ພາກຮຽນ 2': SemesterEnum.SEMESTER_2,
-        'ທ້າຍພາກ': SemesterEnum.SEMESTER_2,
-        'final': SemesterEnum.SEMESTER_2,
+        SemesterEnum.MIDTERM.value: SemesterEnum.MIDTERM,
+        SemesterEnum.FINAL.value: SemesterEnum.FINAL,
+        'ກາງພາກ': SemesterEnum.MIDTERM,
+        'ທ້າຍພາກ': SemesterEnum.FINAL,
     }
     key = str(semester).strip()
     normalized = aliases.get(key) or aliases.get(key.lower())
@@ -117,20 +107,6 @@ def _registered_detail_query_for_subject(
     return _registered_detail_query(db, academic_id, level_id).filter(
         SubjectDetail.subject_detail_id == subject_detail_id,
     )
-
-
-def _get_registered_details(
-    db: Session,
-    academic_id: str,
-    level_id: str,
-) -> list[RegistrationDetail]:
-    return _registered_detail_query(db, academic_id, level_id).order_by(
-        Subject.subject_name.asc(),
-        Student.student_name.asc(),
-        Student.student_lastname.asc(),
-        Registration.registration_id.asc(),
-    ).all()
-
 
 def _get_registered_details_for_subject(
     db: Session,

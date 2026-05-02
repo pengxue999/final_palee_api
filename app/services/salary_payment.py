@@ -354,7 +354,7 @@ def build_receipt_request(db: Session, salary_payment_id: str) -> SalaryPaymentR
         paid_amount=Decimal(payment.total_amount),
         cumulative_paid_amount=cumulative_paid_amount,
         remaining_amount=remaining_amount,
-        status='ຈ່າຍແລ້ວ' if remaining_amount <= 0 else payment.status,
+        status='PAID' if remaining_amount <= 0 else payment.status,
     )
 
 

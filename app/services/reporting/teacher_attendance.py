@@ -121,7 +121,7 @@ def get_teacher_attendance_report(
                 "hourly": hourly,
                 "hourly_rate": hourly_rate,
                 "total_amount": total_amount,
-                "remark": log.remark,
+                "remark": None,
                 "is_substitute": is_substitute,
                 "substitute_for_teacher_name": (
                     substitute_teacher.teacher_name if substitute_teacher else None

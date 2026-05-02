@@ -143,7 +143,11 @@ def build_payment_history_report_request(
                 paid_amount=paid_amount,
                 cumulative_paid_amount=cumulative_paid_amount,
                 remaining_amount=remaining_amount,
-                status="ຈ່າຍແລ້ວ" if remaining_amount <= 0 else "ຈ່າຍບາງສ່ວນ",
+                status=(
+                    RegistrationStatusEnum.PAID.value
+                    if remaining_amount <= 0
+                    else RegistrationStatusEnum.PARTIAL.value
+                ),
             )
         )
 

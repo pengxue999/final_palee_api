@@ -29,6 +29,13 @@ from app.services.reporting.common import (
 )
 
 
+_VALID_GENDERS = ["MALE", "FEMALE"]
+_VALID_SCHOLARSHIPS = [
+    ScholarshipEnum.SCHOLARSHIP,
+    ScholarshipEnum.NO_SCHOLARSHIP,
+]
+
+
 def get_student_report(
     db: Session,
     academic_id: Optional[str] = None,
@@ -63,11 +70,7 @@ def get_student_report(
             query = query.filter(Fee.academic_id == academic_id)
 
         if scholarship:
-            scholarship_enum = (
-                ScholarshipEnum.RECEIVED
-                if scholarship == "ໄດ້ຮັບທຶນ"
-                else ScholarshipEnum.NOT_RECEIVED
-            )
+            scholarship_enum = ScholarshipEnum(scholarship)
             query = query.filter(RegistrationDetail.scholarship == scholarship_enum)
 
         query = query.distinct()
@@ -290,15 +293,12 @@ def get_student_summary(
     total_students = base_query.count()
 
     gender_stats = {}
-    for gender_name in ["ຊາຍ", "ຍິງ"]:
+    for gender_name in _VALID_GENDERS:
         gender_stats[gender_name] = base_query.filter(Student.gender == gender_name).count()
 
     scholarship_stats = {}
     if academic_id:
-        for scholarship_status in [
-            ScholarshipEnum.RECEIVED,
-            ScholarshipEnum.NOT_RECEIVED,
-        ]:
+        for scholarship_status in _VALID_SCHOLARSHIPS:
             count = (
                 db.query(Student)
                 .join(Registration, Student.student_id == Registration.student_id)
@@ -316,7 +316,10 @@ def get_student_summary(
             )
             scholarship_stats[scholarship_status.value] = count
     else:
-        scholarship_stats = {"ໄດ້ຮັບທຶນ": 0, "ບໍ່ໄດ້ຮັບທຶນ": 0}
+        scholarship_stats = {
+            ScholarshipEnum.SCHOLARSHIP.value: 0,
+            ScholarshipEnum.NO_SCHOLARSHIP.value: 0,
+        }
 
     province_stats = {}
     for province in db.query(Province).all():

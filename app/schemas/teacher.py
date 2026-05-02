@@ -3,6 +3,9 @@ from pydantic import BaseModel, field_validator
 from typing import Optional
 
 
+_VALID_GENDERS = {"MALE", "FEMALE"}
+
+
 class TeacherCreate(BaseModel):
     teacher_name: str
     teacher_lastname: str
@@ -13,8 +16,8 @@ class TeacherCreate(BaseModel):
     @field_validator('gender')
     @classmethod
     def validate_gender(cls, v):
-        if v not in ["ຊາຍ", "ຍິງ"]:
-            raise ValueError("ຕ້ອງເລືອກເພດກ່ອນ 'ຊາຍ' ຫຼື 'ຍິງ'")
+        if v not in _VALID_GENDERS:
+            raise ValueError("gender must be 'MALE' or 'FEMALE'")
         return v
 
     @field_validator('teacher_contact')
@@ -36,8 +39,8 @@ class TeacherUpdate(BaseModel):
     @field_validator('gender')
     @classmethod
     def validate_gender(cls, v):
-        if v is not None and v not in ["ຊາຍ", "ຍິງ"]:
-            raise ValueError("ຕ້ອງເລືອກເພດກ່ອນ 'ຊາຍ' ຫຼື 'ຍິງ'")
+        if v is not None and v not in _VALID_GENDERS:
+            raise ValueError("gender must be 'MALE' or 'FEMALE'")
         return v
 
     @field_validator('teacher_contact')

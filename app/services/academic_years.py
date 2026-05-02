@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.utils.foreign_key_helper import safe_delete_with_constraint_check
 
 
-ACTIVE_ACADEMIC_STATUS = "ດໍາເນີນການ"
+ACTIVE_ACADEMIC_STATUS = "ACTIVE"
 
 
 def _generate_academic_id(db: Session) -> str:

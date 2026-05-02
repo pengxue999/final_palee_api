@@ -3,11 +3,11 @@ from sqlalchemy.dialects.mysql import ENUM
 
 
 class AcademicStatusEnum(str, Enum):
-    ACTIVE = "ດໍາເນີນການ"
-    COMPLETED = "ສິ້ນສຸດ"
+    ACTIVE = "ACTIVE"
+    ENDED = "ENDED"
 
 AcademicStatusEnumSQL = ENUM(
     AcademicStatusEnum.ACTIVE,
-    AcademicStatusEnum.COMPLETED,
+    AcademicStatusEnum.ENDED,
     name="academic_status_enum",
 )

@@ -7,6 +7,10 @@ from app.schemas.teaching_log import TeachingLogCreate, TeachingLogUpdate
 from app.configs.exceptions import NotFoundException
 
 
+TEACHING_STATUS = 'TEACHING'
+ABSENT_STATUS = 'ABSENT'
+
+
 def _query_with_relations(db: Session):
     return db.query(TeachingLog).options(
         joinedload(TeachingLog.assignment).joinedload(TeacherAssignment.teacher),
@@ -54,7 +58,7 @@ def get_all(
 
     query = query.order_by(
         desc(TeachingLog.teaching_date),
-        case((TeachingLog.status == 'ຂາດສອນ', 1), else_=0).desc()
+        case((TeachingLog.status == ABSENT_STATUS, 1), else_=0).desc()
     )
     return query.all()
 
@@ -77,7 +81,7 @@ def get_by_teacher(db: Session, teacher_id: str, academic_year: str = None, from
         query = query.filter(TeachingLog.teaching_date <= to_date)
     query = query.order_by(
         desc(TeachingLog.teaching_date),
-        case((TeachingLog.status == 'ຂາດສອນ', 1), else_=0).desc()
+        case((TeachingLog.status == ABSENT_STATUS, 1), else_=0).desc()
     )
     return query.all()
 
@@ -97,8 +101,7 @@ def create(db: Session, data: TeachingLogCreate):
         assignment_id=data.assignment_id,
         substitute_for_assignment_id=data.substitute_for_assignment_id,
         hourly=data.hourly,
-        remark=data.remark,
-        status=data.status,
+        status=data.status or TEACHING_STATUS,
         teaching_date=now,
     )
     db.add(obj)
@@ -112,16 +115,11 @@ def create(db: Session, data: TeachingLogCreate):
             main_assignment = db.query(TeacherAssignment).filter(
                 TeacherAssignment.assignment_id == data.assignment_id
             ).first()
-            sub_teacher_name = "ອາຈານ"
-            if main_assignment and main_assignment.teacher:
-                sub_teacher_name = f"{main_assignment.teacher.teacher_name} {main_assignment.teacher.teacher_lastname}"
-            absent_remark = f"ມີອາຈານສອນແທນ ({sub_teacher_name})"
             absent_log = TeachingLog(
                 assignment_id=data.substitute_for_assignment_id,
                 substitute_for_assignment_id=None,
                 hourly=data.hourly,
-                remark=absent_remark,
-                status='ຂາດສອນ',
+                status=ABSENT_STATUS,
                 teaching_date=now,
             )
             db.add(absent_log)
@@ -153,12 +151,12 @@ def get_summary(db: Session, teacher_id: str = None, academic_year: str = None):
 
     query = db.query(
         func.count(TeachingLog.teaching_log_id).label('total_count'),
-        func.sum(func.if_(TeachingLog.status == 'ຂຶ້ນສອນ', 1, 0)).label('taught_count'),
-        func.sum(func.if_(TeachingLog.status == 'ຂາດສອນ', 1, 0)).label('absent_count'),
-        func.sum(func.if_(TeachingLog.status == 'ຂຶ້ນສອນ', TeachingLog.hourly, 0)).label('total_hours'),
+        func.sum(func.if_(TeachingLog.status == TEACHING_STATUS, 1, 0)).label('taught_count'),
+        func.sum(func.if_(TeachingLog.status == ABSENT_STATUS, 1, 0)).label('absent_count'),
+        func.sum(func.if_(TeachingLog.status == TEACHING_STATUS, TeachingLog.hourly, 0)).label('total_hours'),
         func.sum(
             func.if_(
-                TeachingLog.status == 'ຂຶ້ນສອນ',
+                TeachingLog.status == TEACHING_STATUS,
                 TeachingLog.hourly * TeacherAssignment.hourly_rate,
                 0
             )

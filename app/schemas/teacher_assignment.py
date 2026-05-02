@@ -10,6 +10,17 @@ class TeacherAssignmentCreate(BaseModel):
     hourly_rate: Decimal
 
 
+class TeacherAssignmentBatchItemCreate(BaseModel):
+    subject_detail_id: str
+    hourly_rate: Decimal
+
+
+class TeacherAssignmentBatchCreate(BaseModel):
+    teacher_id: str
+    academic_id: str
+    assignments: list[TeacherAssignmentBatchItemCreate]
+
+
 class TeacherAssignmentUpdate(BaseModel):
     teacher_id: Optional[str] = None
     subject_detail_id: Optional[str] = None
@@ -20,6 +31,8 @@ class TeacherAssignmentUpdate(BaseModel):
 class TeacherAssignmentResponse(BaseModel):
     assignment_id: str
     teacher_id: str
+    subject_detail_id: str
+    academic_id: str
     teacher_name: str
     teacher_lastname: str
     subject_name: str
@@ -32,6 +45,8 @@ class TeacherAssignmentResponse(BaseModel):
         return cls(
             assignment_id=obj.assignment_id,
             teacher_id=obj.teacher_id,
+            subject_detail_id=obj.subject_detail_id,
+            academic_id=obj.academic_id,
             teacher_name=obj.teacher.teacher_name,
             teacher_lastname=obj.teacher.teacher_lastname,
             subject_name=obj.subject_detail.subject.subject_name,
