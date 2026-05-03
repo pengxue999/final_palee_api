@@ -19,6 +19,9 @@ from app.configs.exceptions import NotFoundException
 
 
 SALARY_CATEGORY_NAME = 'ຄ່າສອນ'
+TEACHING_STATUSES = ('TEACHING', 'ຂຶ້ນສອນ')
+ABSENT_STATUSES = ('ABSENT', 'ຂາດສອນ')
+SCHEDULED_STATUSES = TEACHING_STATUSES + ABSENT_STATUSES
 MONTH_NAMES = {
     1: 'ມັງກອນ',
     2: 'ກຸມພາ',
@@ -80,7 +83,7 @@ def _month_date_range(year: int, month: int):
 
 
 def _compute_actual_amount(db: Session, teacher_id: str, year: int, month: int):
-    """Actual earned = attended sessions (ຂຶ້ນສອນ) × hourly_rate for the month."""
+    """Actual earned = attended sessions × hourly_rate for the month."""
     from_date, to_date = _month_date_range(year, month)
     row = db.query(
         func.coalesce(func.sum(TeachingLog.hourly), 0).label('total_hours'),
@@ -92,7 +95,7 @@ def _compute_actual_amount(db: Session, teacher_id: str, year: int, month: int):
         TeacherAssignment, TeachingLog.assignment_id == TeacherAssignment.assignment_id
     ).filter(
         TeacherAssignment.teacher_id == teacher_id,
-        TeachingLog.status == 'ຂຶ້ນສອນ',
+        TeachingLog.status.in_(TEACHING_STATUSES),
         func.date(TeachingLog.teaching_date) >= from_date,
         func.date(TeachingLog.teaching_date) <= to_date,
     ).first()
@@ -104,7 +107,7 @@ def _compute_actual_amount(db: Session, teacher_id: str, year: int, month: int):
 
 
 def _compute_planned_amount(db: Session, teacher_id: str, year: int, month: int):
-    """Planned = all scheduled sessions (ຂຶ້ນສອນ + ຂາດສອນ) × hourly_rate for the month."""
+    """Planned = all scheduled sessions × hourly_rate for the month."""
     from_date, to_date = _month_date_range(year, month)
     row = db.query(
         func.coalesce(func.sum(TeachingLog.hourly), 0).label('total_hours'),
@@ -115,6 +118,7 @@ def _compute_planned_amount(db: Session, teacher_id: str, year: int, month: int)
         TeacherAssignment, TeachingLog.assignment_id == TeacherAssignment.assignment_id
     ).filter(
         TeacherAssignment.teacher_id == teacher_id,
+        TeachingLog.status.in_(SCHEDULED_STATUSES),
         func.date(TeachingLog.teaching_date) >= from_date,
         func.date(TeachingLog.teaching_date) <= to_date,
     ).first()
@@ -205,7 +209,7 @@ def get_teaching_months(db: Session, teacher_id: str = None):
         year_col,
         month_col,
         func.count(TeachingLog.teaching_log_id).label('count'),
-    ).filter(TeachingLog.status == 'ຂຶ້ນສອນ')
+    ).filter(TeachingLog.status.in_(TEACHING_STATUSES))
 
     if teacher_id:
         query = query.join(
@@ -271,6 +275,7 @@ def get_monthly_teachers_summary(db: Session, year: int, month: int):
     teacher_ids_q = db.query(TeacherAssignment.teacher_id).join(
         TeachingLog, TeachingLog.assignment_id == TeacherAssignment.assignment_id
     ).filter(
+        TeachingLog.status.in_(SCHEDULED_STATUSES),
         func.date(TeachingLog.teaching_date) >= from_date,
         func.date(TeachingLog.teaching_date) <= to_date,
     ).distinct().all()
