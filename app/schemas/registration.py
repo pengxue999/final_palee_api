@@ -70,6 +70,8 @@ class RegistrationResponse(BaseModel):
     registration_id: str
     student_name: str
     student_lastname: str
+    academic_id: Optional[str] = None
+    academic_year: Optional[str] = None
     discount_description: Optional[str]
     total_amount: Decimal
     final_amount: Decimal
@@ -85,10 +87,29 @@ class RegistrationResponse(BaseModel):
         elif status_value == '' or status_value is None:
             status_value = RegistrationStatusEnum.UNPAID.value
 
+        academic_id = None
+        academic_year = None
+
+        for detail in obj.details or []:
+            fee = getattr(detail, 'fee_rel', None)
+            year = getattr(fee, 'academic_year', None)
+            if year is not None:
+                academic_id = year.academic_id
+                academic_year = year.academic_year
+                break
+
+        if academic_year is None and obj.discount is not None:
+            discount_year = getattr(obj.discount, 'academic_year', None)
+            if discount_year is not None:
+                academic_id = discount_year.academic_id
+                academic_year = discount_year.academic_year
+
         return cls(
             registration_id=obj.registration_id,
             student_name=obj.student.student_name,
             student_lastname=obj.student.student_lastname,
+            academic_id=academic_id,
+            academic_year=academic_year,
             discount_description=obj.discount.discount_description if obj.discount else None,
             total_amount=obj.total_amount,
             final_amount=obj.final_amount,

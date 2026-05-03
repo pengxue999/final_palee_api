@@ -44,6 +44,9 @@ def get_all(db: Session):
     return db.query(Registration).options(
         joinedload(Registration.student),
         joinedload(Registration.discount),
+        joinedload(Registration.details)
+        .joinedload(RegistrationDetail.fee_rel)
+        .joinedload(Fee.academic_year),
         joinedload(Registration.tuition_payments)
     ).order_by(Registration.registration_date.desc()).all()
 
@@ -52,6 +55,9 @@ def get_by_id(db: Session, registration_id: str) -> Registration:
     obj = db.query(Registration).options(
         joinedload(Registration.student),
         joinedload(Registration.discount),
+        joinedload(Registration.details)
+        .joinedload(RegistrationDetail.fee_rel)
+        .joinedload(Fee.academic_year),
         joinedload(Registration.tuition_payments)
     ).filter(Registration.registration_id == registration_id).first()
     if not obj:
