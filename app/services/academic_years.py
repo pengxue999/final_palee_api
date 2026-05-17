@@ -37,11 +37,14 @@ def get_by_id(db: Session, academic_id: str) -> AcademicYear:
         raise NotFoundException("ຂໍ້ມູນສົກຮຽນ")
     return obj
 
+def _end_active_academic_years(db: Session) -> None:
+    db.query(AcademicYear).filter(
+        AcademicYear.status == ACTIVE_ACADEMIC_STATUS
+    ).update({"status": "ENDED"}, synchronize_session="fetch")
+
+
 def create(db: Session, data: AcademicYearCreate):
-    if _has_active_academic_year(db):
-        raise ConflictException(
-            "ບໍ່ສາມາດເພີ່ມສົກຮຽນໃໝ່ໄດ້ ເນື່ອງຈາກຍັງມີສົກຮຽນທີ່ດໍາເນີນການຢູ່"
-        )
+    _end_active_academic_years(db)
     academic_id = _generate_academic_id(db)
     obj = AcademicYear(academic_id=academic_id, **data.model_dump())
     db.add(obj)

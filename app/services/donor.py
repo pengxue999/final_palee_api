@@ -62,4 +62,8 @@ def update(db: Session, donor_id: str, data: DonorUpdate):
 def delete(db: Session, donor_id: str):
     obj = get_by_id(db, donor_id)
     db.delete(obj)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ConflictException("ບໍ່ສາມາດລຶບຜູ້ບໍລິຈາກນີ້ໄດ້ ເນື່ອງຈາກມີຂໍ້ມູນການບໍລິຈາກອ້າງອີງຢູ່")

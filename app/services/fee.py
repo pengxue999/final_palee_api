@@ -4,7 +4,7 @@ from app.models.fee import Fee
 from app.models.subject_detail import SubjectDetail
 from app.models.subject import Subject
 from app.schemas.fee import FeeCreate, FeeUpdate
-from app.configs.exceptions import ConflictException
+from app.configs.exceptions import ConflictException, NotFoundException
 
 def _generate_fee_id(db: Session) -> str:
     last_fee = db.query(Fee).order_by(Fee.fee_id.desc()).first()
@@ -63,4 +63,8 @@ def update(db: Session, fee_id: str, data: FeeUpdate):
 def delete(db: Session, fee_id: str):
     obj = get_by_id(db, fee_id)
     db.delete(obj)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ConflictException("ບໍ່ສາມາດລຶບຄ່າຮຽນນີ້ໄດ້ ເນື່ອງຈາກມີຂໍ້ມູນການລົງທະບຽນອ້າງອີງຢູ່")

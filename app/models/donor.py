@@ -12,4 +12,4 @@ class Donor(Base):
     donor_contact = Column(String(20), nullable=False, unique=True)
     section = Column(String(255), nullable=True)
 
-    donations = relationship("Donation", back_populates="donor")
+    donations = relationship("Donation", back_populates="donor", passive_deletes=True)

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import extract, func
 from decimal import Decimal
 from app.models.academic_years import AcademicYear
 from app.models.student import Student
@@ -10,7 +10,6 @@ from app.models.registration_detail import RegistrationDetail
 from app.models.fee import Fee
 from app.models.income import Income
 from app.models.expense import Expense
-from app.models.tuition_payment import TuitionPayment
 from app.enums.academic_status import AcademicStatusEnum
 
 
@@ -19,6 +18,24 @@ def get_active_academic_year(db: Session) -> AcademicYear:
     return db.query(AcademicYear).filter(
         AcademicYear.status == AcademicStatusEnum.ACTIVE
     ).first()
+
+
+def get_academic_target_year(db: Session, academic_id: str = None) -> int | None:
+    """ແປງສົກຮຽນ 2025-2026 ເປັນປີເປົ້າໝາຍ 2026."""
+    if not academic_id:
+        return None
+
+    academic_year = db.query(AcademicYear).filter(
+        AcademicYear.academic_id == academic_id
+    ).first()
+
+    if not academic_year or not academic_year.academic_year:
+        return None
+
+    try:
+        return int(str(academic_year.academic_year).split('-')[-1].strip())
+    except (AttributeError, ValueError):
+        return None
 
 
 def get_student_stats(db: Session, academic_id: str = None) -> dict:
@@ -67,11 +84,6 @@ def get_teacher_stats(db: Session, academic_id: str = None) -> dict:
 
 
 def get_income_stats(db: Session, academic_id: str = None) -> dict:
-    """
-    ດຶງສະຖິຕິລາຍຮັບ - ໃຊ້ຕາຕະລາງ Income ເທົ່ານັ້ນ (ຄືກັບ Finance Report)
-    - ຖ້າມີ academic_id: ກັ່ນຕອງລາຍຮັບຕາມ date range ຂອງສົກຮຽນ
-    - ຖ້າບໍ່ມີ: ຄິດໄລ່ລາຍຮັບທັງໝົດ
-    """
     total_income = db.query(func.sum(Income.amount)).scalar() or Decimal('0')
 
     tuition_income = db.query(func.sum(Income.amount)).filter(
@@ -84,37 +96,22 @@ def get_income_stats(db: Session, academic_id: str = None) -> dict:
 
     other_income = float(total_income) - float(tuition_income) - float(donation_income)
 
-    if academic_id:
-        academic_year = db.query(AcademicYear).filter(
-            AcademicYear.academic_id == academic_id
-        ).first()
+    target_year = get_academic_target_year(db, academic_id)
+    if target_year is not None:
+        total_income = db.query(func.sum(Income.amount)).filter(
+            extract('year', Income.income_date) == target_year
+        ).scalar() or Decimal('0')
+        tuition_income = db.query(func.sum(Income.amount)).filter(
+            Income.tuition_payment_id != None,
+            extract('year', Income.income_date) == target_year
+        ).scalar() or Decimal('0')
 
-        if academic_year and academic_year.start_date_at and academic_year.end_date_at:
-            total_income = db.query(func.sum(Income.amount)).filter(
-                Income.income_date.between(
-                    academic_year.start_date_at,
-                    academic_year.end_date_at
-                )
-            ).scalar() or Decimal('0')
+        donation_income = db.query(func.sum(Income.amount)).filter(
+            Income.donation_id != None,
+            extract('year', Income.income_date) == target_year
+        ).scalar() or Decimal('0')
 
-            tuition_income = db.query(func.sum(Income.amount)).filter(
-                Income.tuition_payment_id != None,
-                Income.income_date.between(
-                    academic_year.start_date_at,
-                    academic_year.end_date_at
-                )
-            ).scalar() or Decimal('0')
-
-            donation_income = db.query(func.sum(Income.amount)).filter(
-                Income.donation_id != None,
-                Income.income_date.between(
-                    academic_year.start_date_at,
-                    academic_year.end_date_at
-                )
-            ).scalar() or Decimal('0')
-
-            other_income = float(total_income) - float(tuition_income) - float(donation_income)
-
+        other_income = float(total_income) - float(tuition_income) - float(donation_income)
     return {
         "total": float(total_income),
         "tuition": float(tuition_income),
@@ -124,28 +121,17 @@ def get_income_stats(db: Session, academic_id: str = None) -> dict:
 
 
 def get_expense_stats(db: Session, academic_id: str = None) -> dict:
-    """
-    ດຶງສະຖິຕິລາຍຈ່າຍ
-    - ຖ້າມີ academic_id: ກັ່ນຕອງລາຍຈ່າຍຕາມ date range ຂອງສົກຮຽນ (start_date_at ຫາ end_date_at)
-    - ຖ້າບໍ່ມີ: ຄິດໄລ່ລາຍຈ່າຍທັງໝົດ
-    """
     query = db.query(func.sum(Expense.amount))
     salary_query = db.query(func.sum(Expense.amount)).filter(
         Expense.salary_payment_id != None
     )
 
-    if academic_id:
-        academic_year = db.query(AcademicYear).filter(
-            AcademicYear.academic_id == academic_id
-        ).first()
-
-        if academic_year and academic_year.start_date_at and academic_year.end_date_at:
-            date_filter = Expense.expense_date.between(
-                academic_year.start_date_at,
-                academic_year.end_date_at
-            )
-            query = query.filter(date_filter)
-            salary_query = salary_query.filter(date_filter)
+    target_year = get_academic_target_year(db, academic_id)
+    if target_year is not None:
+        query = query.filter(extract('year', Expense.expense_date) == target_year)
+        salary_query = salary_query.filter(
+            extract('year', Expense.expense_date) == target_year
+        )
 
     total_expense = query.scalar() or Decimal('0')
     salary_expense = salary_query.scalar() or Decimal('0')
@@ -159,9 +145,6 @@ def get_expense_stats(db: Session, academic_id: str = None) -> dict:
 
 
 def get_dashboard_stats(db: Session, academic_id: str = None) -> dict:
-    """
-    ດຶງຂໍ້ມູນສະຖິຕິທັງໝົດສຳລັບ Dashboard
-    """
     if academic_id:
         academic_year = db.query(AcademicYear).filter(
             AcademicYear.academic_id == academic_id

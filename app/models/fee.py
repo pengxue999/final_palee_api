@@ -13,4 +13,4 @@ class Fee(Base):
 
     subject_detail = relationship("SubjectDetail", back_populates="fees")
     academic_year = relationship("AcademicYear", back_populates="fees")
-    registration_details = relationship("RegistrationDetail", back_populates="fee_rel")
+    registration_details = relationship("RegistrationDetail", back_populates="fee_rel", passive_deletes=True)
