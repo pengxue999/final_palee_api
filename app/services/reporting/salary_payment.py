@@ -20,6 +20,11 @@ from app.services.reporting.common import (
     write_excel_table_headers,
     write_excel_table_rows,
 )
+from app.utils.enum_localization import (
+    is_paid_status,
+    is_pending_salary_status,
+    localize_registration_status,
+)
 
 
 def _month_name(month: Optional[int]) -> Optional[str]:
@@ -58,7 +63,12 @@ def get_salary_payment_report(
     if teacher_id:
         query = query.filter(SalaryPayment.teacher_id == teacher_id)
     if status:
-        query = query.filter(SalaryPayment.status == status)
+        if is_pending_salary_status(status):
+            query = query.filter(SalaryPayment.status != "PAID")
+        else:
+            localized_status = localize_registration_status(status)
+            normalized_status = "PAID" if is_paid_status(localized_status) else status
+            query = query.filter(SalaryPayment.status == normalized_status)
 
     payments = query.order_by(
         SalaryPayment.payment_date.desc(),
@@ -89,7 +99,11 @@ def get_salary_payment_report(
                     if payment.payment_date
                     else None
                 ),
-                "status": payment.status,
+                "status": (
+                    "ຄ້າງຈ່າຍ"
+                    if is_pending_salary_status(payment.status)
+                    else localize_registration_status(payment.status)
+                ),
                 "user_name": user_name,
             }
         )
@@ -105,7 +119,7 @@ def get_salary_payment_report(
             "month_name": _month_name(month),
             "teacher_id": teacher_id,
             "teacher_name": resolve_teacher_name(db, teacher_id),
-            "status": status,
+            "status": "ຄ້າງຈ່າຍ" if is_pending_salary_status(status) else localize_registration_status(status),
         },
         "summary": {
             "total_amount": total_amount,

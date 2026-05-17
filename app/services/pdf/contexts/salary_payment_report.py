@@ -2,6 +2,10 @@ from datetime import datetime
 
 from app.services.pdf.assets import font_data_urls
 from app.services.pdf.formatters import format_plain_currency, format_report_date_text
+from app.utils.enum_localization import (
+    is_pending_salary_status,
+    localize_registration_status,
+)
 
 
 def build_salary_payment_report_context(
@@ -23,7 +27,11 @@ def build_salary_payment_report_context(
 
     add_filter("ເດືອນ", filters.get("month_name"))
     add_filter("ອາຈານ", filters.get("teacher_name"))
-    add_filter("ສະຖານະ", filters.get("status"))
+    status_filter = filters.get("status")
+    if is_pending_salary_status(status_filter):
+        add_filter("ສະຖານະ", "ຄ້າງຈ່າຍ")
+    else:
+        add_filter("ສະຖານະ", localize_registration_status(status_filter))
 
     prepared_payments = []
     for payment in payments:
@@ -38,6 +46,11 @@ def build_salary_payment_report_context(
                 ),
                 "amount_display": format_plain_currency(
                     float(payment.get("total_amount") or 0)
+                ),
+                "status": (
+                    "ຄ້າງຈ່າຍ"
+                    if is_pending_salary_status(payment.get("status"))
+                    else localize_registration_status(payment.get("status"))
                 ),
             }
         )

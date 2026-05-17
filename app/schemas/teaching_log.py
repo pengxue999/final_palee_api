@@ -39,6 +39,7 @@ class TeachingLogResponse(BaseModel):
     teaching_date: Optional[datetime] = None
     hourly: Decimal
     hourly_rate: Decimal
+    remark: Optional[str] = None
     status: Optional[str] = None
     substitute_for_assignment_id: Optional[str] = None
     substitute_for_teacher_id: Optional[str] = None
@@ -69,6 +70,25 @@ class TeachingLogResponse(BaseModel):
             sub_subject_name = sub_assignment.subject_detail.subject.subject_name
             sub_level_name = sub_assignment.subject_detail.level.level_name
 
+        remark = None
+        if sub_assignment:
+            substitute_teacher_full_name = " ".join(
+                part for part in [sub_teacher_name, sub_teacher_lastname] if part
+            ).strip()
+            substitute_subject_text = sub_subject_name or ""
+            detail_parts = [
+                part
+                for part in [substitute_teacher_full_name, substitute_subject_text]
+                if part
+            ]
+            remark = (
+                f"ສອນແທນ ({' - '.join(detail_parts)})"
+                if detail_parts
+                else "ສອນແທນ"
+            )
+        elif obj.status == 'TEACHING':
+            remark = 'ສອນເອງ'
+
         return cls(
             teaching_log_id=obj.teaching_log_id,
             assignment_id=assignment.assignment_id,
@@ -81,6 +101,7 @@ class TeachingLogResponse(BaseModel):
             teaching_date=teaching_date,
             hourly=obj.hourly,
             hourly_rate=assignment.hourly_rate,
+            remark=remark,
             status=obj.status,
             substitute_for_assignment_id=obj.substitute_for_assignment_id,
             substitute_for_teacher_id=sub_teacher_id,

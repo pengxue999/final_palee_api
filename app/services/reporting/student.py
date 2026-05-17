@@ -27,6 +27,12 @@ from app.services.reporting.common import (
     resolve_district_name,
     resolve_province_name,
 )
+from app.utils.enum_localization import (
+    api_gender,
+    api_scholarship,
+    localize_gender,
+    localize_scholarship,
+)
 
 
 _VALID_GENDERS = ["MALE", "FEMALE"]
@@ -44,19 +50,22 @@ def get_student_report(
     scholarship: Optional[str] = None,
     gender: Optional[str] = None,
 ) -> Dict[str, Any]:
+    normalized_gender = api_gender(gender) if gender else None
+    normalized_scholarship = api_scholarship(scholarship) if scholarship else None
+
     query = db.query(Student).options(
         joinedload(Student.district).joinedload(District.province),
     )
 
-    if gender:
-        query = query.filter(Student.gender == gender)
+    if normalized_gender:
+        query = query.filter(Student.gender == normalized_gender)
 
     if district_id:
         query = query.filter(Student.district_id == district_id)
     elif province_id:
         query = query.join(District).filter(District.province_id == province_id)
 
-    if academic_id or scholarship:
+    if academic_id or normalized_scholarship:
         query = (
             query.join(Registration, Student.student_id == Registration.student_id)
             .join(
@@ -69,8 +78,8 @@ def get_student_report(
         if academic_id:
             query = query.filter(Fee.academic_id == academic_id)
 
-        if scholarship:
-            scholarship_enum = ScholarshipEnum(scholarship)
+        if normalized_scholarship:
+            scholarship_enum = ScholarshipEnum(normalized_scholarship)
             query = query.filter(RegistrationDetail.scholarship == scholarship_enum)
 
         query = query.distinct()
@@ -95,7 +104,7 @@ def get_student_report(
                 .first()
             )
             if reg_detail:
-                student_scholarship = reg_detail.scholarship.value
+                student_scholarship = localize_scholarship(reg_detail.scholarship.value)
 
         student_list.append(
             {
@@ -103,7 +112,7 @@ def get_student_report(
                 "student_name": student.student_name,
                 "student_lastname": student.student_lastname,
                 "full_name": f"{student.student_name} {student.student_lastname}",
-                "gender": student.gender,
+                "gender": localize_gender(student.gender),
                 "student_contact": student.student_contact,
                 "parents_contact": student.parents_contact,
                 "school": student.school,
@@ -125,8 +134,8 @@ def get_student_report(
             "province_name": resolve_province_name(db, province_id),
             "district_id": district_id,
             "district_name": resolve_district_name(db, district_id),
-            "scholarship": scholarship,
-            "gender": gender,
+            "scholarship": localize_scholarship(normalized_scholarship),
+            "gender": localize_gender(normalized_gender),
         },
         "total_count": len(student_list),
         "students": student_list,

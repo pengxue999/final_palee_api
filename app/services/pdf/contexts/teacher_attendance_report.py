@@ -2,6 +2,7 @@ from datetime import datetime
 
 from app.services.pdf.assets import font_data_urls
 from app.services.pdf.formatters import format_month_label, format_plain_currency
+from app.utils.enum_localization import localize_teaching_status
 
 
 def build_teacher_attendance_report_context(
@@ -27,17 +28,21 @@ def build_teacher_attendance_report_context(
     add_filter("ສະຖານະ", filters.get("status"))
     add_filter("ອາຈານ", filters.get("teacher_name"))
 
-    present_count = sum(1 for log in logs if log.get("status") == "ຂຶ້ນສອນ")
-    absent_count = sum(1 for log in logs if log.get("status") == "ຂາດສອນ")
+    present_count = sum(
+        1 for log in logs if localize_teaching_status(log.get("status")) == "ຂຶ້ນສອນ"
+    )
+    absent_count = sum(
+        1 for log in logs if localize_teaching_status(log.get("status")) == "ຂາດສອນ"
+    )
     total_hours = sum(
         float(log.get("hourly") or 0)
         for log in logs
-        if log.get("status") == "ຂຶ້ນສອນ"
+        if localize_teaching_status(log.get("status")) == "ຂຶ້ນສອນ"
     )
     total_amount = sum(
         float(log.get("total_amount") or 0)
         for log in logs
-        if log.get("status") == "ຂຶ້ນສອນ"
+        if localize_teaching_status(log.get("status")) == "ຂຶ້ນສອນ"
     )
 
     prepared_logs = []
@@ -73,6 +78,7 @@ def build_teacher_attendance_report_context(
         prepared_logs.append(
             {
                 **log,
+                "status": localize_teaching_status(log.get("status")),
                 "subject_display": log.get("substitute_for_subject_name")
                 or log.get("subject_name")
                 or "-",

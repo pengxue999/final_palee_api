@@ -1,6 +1,7 @@
 from app.schemas.tuition_payment import TuitionPaymentReceiptRequest
 from app.services.pdf.assets import font_data_urls
 from app.services.pdf.formatters import format_currency, format_date
+from app.utils.enum_localization import localize_payment_method
 
 
 def build_tuition_payment_context(
@@ -15,7 +16,7 @@ def build_tuition_payment_context(
         "invoice_id": data.invoice_id,
         "registration_id": data.registration_id,
         "student_name": data.student_name,
-        "payment_method": data.payment_method,
+        "payment_method": localize_payment_method(data.payment_method),
         "pay_date": format_date(data.pay_date),
         "installment_label": str(data.installment_index),
         "selected_fees": [

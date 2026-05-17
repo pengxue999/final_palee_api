@@ -25,6 +25,7 @@ from app.services.reporting.common import (
     resolve_academic_year_name,
     resolve_teacher_name,
 )
+from app.utils.enum_localization import api_teaching_status, localize_teaching_status
 
 
 def get_teacher_attendance_report(
@@ -34,6 +35,8 @@ def get_teacher_attendance_report(
     status: Optional[str] = None,
     teacher_id: Optional[str] = None,
 ) -> Dict[str, Any]:
+    normalized_status = api_teaching_status(status) if status else None
+
     query = db.query(TeachingLog).options(
         joinedload(TeachingLog.assignment).joinedload(TeacherAssignment.teacher),
         joinedload(TeachingLog.assignment)
@@ -61,8 +64,8 @@ def get_teacher_attendance_report(
         if teacher_id:
             query = query.filter(TeacherAssignment.teacher_id == teacher_id)
 
-    if status:
-        query = query.filter(TeachingLog.status == status)
+    if normalized_status:
+        query = query.filter(TeachingLog.status == normalized_status)
 
     if month:
         year, month_number = month.split("-")
@@ -96,6 +99,34 @@ def get_teacher_attendance_report(
         )
         total_amount = hourly * hourly_rate
 
+        remark = None
+        if is_substitute:
+            substitute_teacher_full_name = " ".join(
+                part
+                for part in [
+                    substitute_teacher.teacher_name if substitute_teacher else None,
+                    substitute_teacher.teacher_lastname if substitute_teacher else None,
+                ]
+                if part
+            ).strip()
+            substitute_subject_name = (
+                substitute_subject.subject.subject_name
+                if substitute_subject and substitute_subject.subject
+                else None
+            )
+            substitute_parts = [
+                part
+                for part in [substitute_teacher_full_name, substitute_subject_name]
+                if part
+            ]
+            remark = (
+                f"ສອນແທນ ({' - '.join(substitute_parts)})"
+                if substitute_parts
+                else "ສອນແທນ"
+            )
+        elif log.status == 'TEACHING':
+            remark = 'ສອນເອງ'
+
         log_list.append(
             {
                 "teaching_log_id": log.teaching_log_id,
@@ -117,11 +148,11 @@ def get_teacher_attendance_report(
                 "teaching_date": (
                     log.teaching_date.strftime("%Y-%m-%d") if log.teaching_date else None
                 ),
-                "status": log.status,
+                "status": localize_teaching_status(log.status),
                 "hourly": hourly,
                 "hourly_rate": hourly_rate,
                 "total_amount": total_amount,
-                "remark": None,
+                "remark": remark,
                 "is_substitute": is_substitute,
                 "substitute_for_teacher_name": (
                     substitute_teacher.teacher_name if substitute_teacher else None
@@ -142,7 +173,7 @@ def get_teacher_attendance_report(
             "academic_id": academic_id,
             "academic_year_name": resolve_academic_year_name(db, academic_id),
             "month": month,
-            "status": status,
+            "status": localize_teaching_status(normalized_status),
             "teacher_id": teacher_id,
             "teacher_name": resolve_teacher_name(db, teacher_id),
         },

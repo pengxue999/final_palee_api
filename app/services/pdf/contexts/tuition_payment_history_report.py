@@ -3,6 +3,10 @@ from datetime import datetime
 from app.schemas.tuition_payment import TuitionPaymentHistoryReportRequest
 from app.services.pdf.assets import font_data_urls
 from app.services.pdf.formatters import format_currency, format_date
+from app.utils.enum_localization import (
+    localize_payment_method,
+    localize_registration_status,
+)
 
 
 def build_tuition_payment_history_report_context(
@@ -26,11 +30,11 @@ def build_tuition_payment_history_report_context(
                 "installment_index": item.installment_index,
                 "invoice_id": item.invoice_id,
                 "pay_date": format_date(item.pay_date),
-                "payment_method": item.payment_method,
+                "payment_method": localize_payment_method(item.payment_method),
                 "paid_amount": format_currency(item.paid_amount),
                 "cumulative_paid_amount": format_currency(item.cumulative_paid_amount),
                 "remaining_amount": format_currency(item.remaining_amount),
-                "status": item.status,
+                "status": localize_registration_status(item.status),
             }
             for item in data.payment_items
         ],

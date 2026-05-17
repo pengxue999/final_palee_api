@@ -1,6 +1,7 @@
 from app.schemas.salary_payment import SalaryPaymentReceiptRequest
 from app.services.pdf.assets import font_data_urls
 from app.services.pdf.formatters import format_currency, format_date, format_hours
+from app.utils.enum_localization import localize_registration_status
 
 
 def build_salary_payment_context(
@@ -32,7 +33,7 @@ def build_salary_payment_context(
         "paid_amount": format_currency(data.paid_amount),
         "cumulative_paid_amount": format_currency(data.cumulative_paid_amount),
         "remaining_amount": format_currency(data.remaining_amount),
-        "status": data.status,
+        "status": localize_registration_status(data.status),
         "watermark_label": "ຈ່າຍແລ້ວ" if is_fully_paid else "ຈ່າຍບາງສ່ວນ",
         "watermark_class": "is-paid" if is_fully_paid else "is-partial",
     }
