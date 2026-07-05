@@ -28,10 +28,14 @@ def get_all(
 @router.get("/options/teaching-months")
 def get_teaching_months(
     teacher_id: Optional[str] = None,
+    academic_id: Optional[str] = None,
+    all_years: bool = False,
     db: Session = Depends(get_db)
 ):
     """Get available months from teaching logs for period selection."""
-    data = svc.get_teaching_months(db, teacher_id=teacher_id)
+    data = svc.get_teaching_months(
+        db, teacher_id=teacher_id, academic_id=academic_id, all_years=all_years
+    )
     return success_response(data, "ດຶງຂໍ້ມູນເດືອນທີ່ມີການສອນສຳເລັດ")
 
 
@@ -39,11 +43,15 @@ def get_teaching_months(
 def get_monthly_teachers_summary(
     month: int = Query(..., description="Month 1-12"),
     year: Optional[int] = Query(None, description="Year (e.g. 2026), defaults to current year"),
+    academic_id: Optional[str] = None,
+    all_years: bool = False,
     db: Session = Depends(get_db)
 ):
     """Get all teachers with their salary summary for a specific month."""
     year = year or datetime.now().year
-    data = svc.get_monthly_teachers_summary(db, year, month)
+    data = svc.get_monthly_teachers_summary(
+        db, year, month, academic_id=academic_id, all_years=all_years
+    )
     return success_response(data, "ດຶງຂໍ້ມູນສະຫຼຸບອາຈານປະຈຳເດືອນສຳເລັດ")
 
 
@@ -62,6 +70,7 @@ def calculate_salary(
     teacher_id: str,
     month: int = Query(..., description="Month 1-12"),
     year: Optional[int] = Query(None, description="Year (e.g. 2026), defaults to current year"),
+    academic_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Calculate teacher salary for a specific month.
@@ -70,7 +79,7 @@ def calculate_salary(
     total paid, and remaining balance including prior-month advance deductions.
     """
     year = year or datetime.now().year
-    data = svc.calculate_teacher_salary(db, teacher_id, year, month)
+    data = svc.calculate_teacher_salary(db, teacher_id, year, month, academic_id=academic_id)
     return success_response(data, "ຄິດໄລ່ເງິນສອນສຳເລັດ")
 
 
@@ -79,11 +88,12 @@ def get_teacher_summary(
     teacher_id: str,
     month: int = Query(..., description="Month 1-12"),
     year: Optional[int] = Query(None, description="Year (e.g. 2026), defaults to current year"),
+    academic_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Get payment summary for a teacher in a specific month."""
     year = year or datetime.now().year
-    data = svc.get_payment_summary_by_teacher(db, teacher_id, year, month)
+    data = svc.get_payment_summary_by_teacher(db, teacher_id, year, month, academic_id=academic_id)
     return success_response(data, "ດຶງຂໍ້ມູນສະຫຼຸບການຈ່າຍເງິນສຳເລັດ")
 
 

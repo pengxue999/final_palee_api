@@ -22,6 +22,25 @@ def _generate_donor_id(db: Session) -> str:
         return f"DN{num:03d}"
     return "DN001"
 
+
+def _check_duplicate_name(
+    db: Session,
+    donor_name: str,
+    donor_lastname: str,
+    exclude_id: str | None = None,
+):
+    query = db.query(Donor).filter(
+        Donor.donor_name == donor_name,
+        Donor.donor_lastname == donor_lastname,
+    )
+    if exclude_id is not None:
+        query = query.filter(Donor.donor_id != exclude_id)
+    if query.first():
+        raise ConflictException(
+            f"ຜູ້ບໍລິຈາກຊື່ '{donor_name} {donor_lastname}' ມີຢູ່ແລ້ວ"
+        )
+
+
 def get_all(db: Session):
     return db.query(Donor).all()
 
@@ -34,6 +53,7 @@ def get_by_id(db: Session, donor_id: str):
 
 
 def create(db: Session, data: DonorCreate):
+    _check_duplicate_name(db, data.donor_name, data.donor_lastname)
     donor_id= _generate_donor_id(db)
     obj = Donor(donor_id=donor_id, **data.model_dump())
     db.add(obj)
@@ -48,6 +68,13 @@ def create(db: Session, data: DonorCreate):
 
 def update(db: Session, donor_id: str, data: DonorUpdate):
     obj = get_by_id(db, donor_id)
+    if data.donor_name is not None or data.donor_lastname is not None:
+        _check_duplicate_name(
+            db,
+            data.donor_name if data.donor_name is not None else obj.donor_name,
+            data.donor_lastname if data.donor_lastname is not None else obj.donor_lastname,
+            exclude_id=donor_id,
+        )
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(obj, field, value)
     try:

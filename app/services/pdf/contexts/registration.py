@@ -16,9 +16,11 @@ def build_registration_context(data: RegistrationReceiptRequest) -> dict[str, ob
                 "subject_name": item.subject_name,
                 "level_name": item.level_name,
                 "fee": format_currency(item.fee),
+                "is_scholarship": item.is_scholarship,
             }
             for item in data.selected_fees
         ],
+        "has_scholarship": any(item.is_scholarship for item in data.selected_fees),
         "tuition_fee": format_currency(data.tuition_fee),
         "total_fee": format_currency(data.total_fee),
         "discount_amount": format_currency(data.discount_amount),

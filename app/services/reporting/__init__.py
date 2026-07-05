@@ -10,6 +10,10 @@ from app.services.reporting.popular_subjects import (
     get_popular_subject_level_detail_report,
     get_popular_subjects_report,
 )
+from app.services.reporting.registration import (
+    export_registration_report,
+    get_registration_report,
+)
 from app.services.reporting.student import (
     export_student_report,
     get_student_report,
@@ -31,6 +35,7 @@ __all__ = [
     "export_finance_report",
     "export_popular_subject_level_detail_report",
     "export_popular_subjects_report",
+    "export_registration_report",
     "export_salary_payment_report",
     "export_student_report",
     "export_teacher_attendance_report",
@@ -38,6 +43,7 @@ __all__ = [
     "get_finance_report",
     "get_popular_subject_level_detail_report",
     "get_popular_subjects_report",
+    "get_registration_report",
     "get_salary_payment_report",
     "get_student_report",
     "get_student_summary",

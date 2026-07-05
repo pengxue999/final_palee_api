@@ -18,6 +18,7 @@ def get_assessment_results_report(
     subject_id: Optional[str] = Query(None, description="ລະຫັດວິຊາ (optional)"),
     level_id: Optional[str] = Query(None, description="ລະຫັດລະດັບ (optional)"),
     ranking: Optional[int] = Query(None, description="ອັນດັບ 1, 2, 3 (optional)"),
+    teacher_id: Optional[str] = Query(None, description="ລະຫັດອາຈານ: ສະແດງສະເພາະວິຊາທີ່ສອນ (optional)"),
     db: Session = Depends(get_db),
 ):
     result = evaluation_svc.get_assessment_report(
@@ -28,6 +29,7 @@ def get_assessment_results_report(
         subject_id=subject_id,
         level_id=level_id,
         ranking=ranking,
+        teacher_id=teacher_id,
     )
     return success_response(result, "ດຶງລາຍງານຜົນການຮຽນສຳເລັດ")
 
@@ -105,15 +107,7 @@ def get_student_report(
     gender: Optional[str] = Query(None, description="ເພດ: 'ຊາຍ' ຫຼື 'ຍິງ' (optional)"),
     db: Session = Depends(get_db)
 ):
-    """
-    ລາຍງານຂໍ້ມູນນັກຮຽນຕາມເງື່ອນໄຂຕ່າງໆ
-
-    - academic_id: ກັ່ນຕອງຕາມສົກຮຽນ
-    - province_id: ກັ່ນຕອງຕາມແຂວງ
-    - district_id: ກັ່ນຕອງຕາມເມືອງ
-    - scholarship: ກັ່ນຕອງຕາມສະຖານະທຶນ
-    - gender: ກັ່ນຕອງຕາມເພດ
-    """
+  
     result = svc.get_student_report(
         db,
         academic_id=academic_id,
@@ -168,6 +162,74 @@ def student_report_pdf(
         gender=gender,
     )
     pdf_bytes = receipt_pdf_svc.build_student_report_pdf(report_data)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+    )
+
+
+@router.get("/registrations")
+def get_registration_report(
+    academic_id: Optional[str] = Query(None, description="ລະຫັດສົກຮຽນ (optional)"),
+    subject_id: Optional[str] = Query(None, description="ລະຫັດວິຊາ (optional)"),
+    level_id: Optional[str] = Query(None, description="ລະຫັດລະດັບ (optional)"),
+    status: Optional[str] = Query(
+        None,
+        description=(
+            "ສະຖານະການຊຳລະ: PAID, UNPAID, PARTIAL, ຄ່າທີ່ຄັ່ນດ້ວຍ ',' "
+            "(ເຊັ່ນ PAID,PARTIAL) ຫຼື PAID_PARTIAL (optional)"
+        ),
+    ),
+    db: Session = Depends(get_db),
+):
+    """ລາຍງານຂໍ້ມູນການລົງທະບຽນຕາມເງື່ອນໄຂຕ່າງໆ"""
+    result = svc.get_registration_report(
+        db,
+        academic_id=academic_id,
+        subject_id=subject_id,
+        level_id=level_id,
+        status=status,
+    )
+    return success_response(result, "ດຶງຂໍ້ມູນລາຍງານການລົງທະບຽນສຳເລັດ")
+
+
+@router.get("/registrations/export")
+def export_registration_report(
+    academic_id: Optional[str] = Query(None, description="ລະຫັດສົກຮຽນ (optional)"),
+    subject_id: Optional[str] = Query(None, description="ລະຫັດວິຊາ (optional)"),
+    level_id: Optional[str] = Query(None, description="ລະຫັດລະດັບ (optional)"),
+    status: Optional[str] = Query(None, description="ສະຖານະການຊຳລະ (optional)"),
+    format: str = Query("excel", description="ຮູບແບບໄຟລ໌: csv ຫຼື excel"),
+    db: Session = Depends(get_db),
+):
+    """Export ຂໍ້ມູນການລົງທະບຽນເປັນ CSV ຫຼື Excel"""
+    result = svc.export_registration_report(
+        db,
+        academic_id=academic_id,
+        subject_id=subject_id,
+        level_id=level_id,
+        status=status,
+        format=format,
+    )
+    return success_response(result, "Export ຂໍ້ມູນສຳເລັດ")
+
+
+@router.get("/registrations/report-pdf")
+def registration_report_pdf(
+    academic_id: Optional[str] = Query(None, description="ລະຫັດສົກຮຽນ (optional)"),
+    subject_id: Optional[str] = Query(None, description="ລະຫັດວິຊາ (optional)"),
+    level_id: Optional[str] = Query(None, description="ລະຫັດລະດັບ (optional)"),
+    status: Optional[str] = Query(None, description="ສະຖານະການຊຳລະ (optional)"),
+    db: Session = Depends(get_db),
+):
+    report_data = svc.get_registration_report(
+        db,
+        academic_id=academic_id,
+        subject_id=subject_id,
+        level_id=level_id,
+        status=status,
+    )
+    pdf_bytes = receipt_pdf_svc.build_registration_report_pdf(report_data)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

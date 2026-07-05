@@ -3,6 +3,8 @@ from sqlalchemy.exc import IntegrityError
 from app.models.fee import Fee
 from app.models.subject_detail import SubjectDetail
 from app.models.subject import Subject
+from app.models.academic_years import AcademicYear
+from app.enums.academic_status import AcademicStatusEnum
 from app.schemas.fee import FeeCreate, FeeUpdate
 from app.configs.exceptions import ConflictException, NotFoundException
 
@@ -23,8 +25,13 @@ def _fee_options():
         joinedload(Fee.academic_year),
     ]
 
-def get_all(db: Session):
-    return db.query(Fee).options(*_fee_options()).all()
+def get_all(db: Session, active_only: bool = False):
+    query = db.query(Fee).options(*_fee_options())
+    if active_only:
+        query = query.join(Fee.academic_year).filter(
+            AcademicYear.status == AcademicStatusEnum.ACTIVE
+        )
+    return query.all()
 
 def get_by_id(db: Session, fee_id: str) -> Fee:
     obj = db.query(Fee).options(*_fee_options()).filter(Fee.fee_id == fee_id).first()

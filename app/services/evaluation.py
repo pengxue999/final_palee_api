@@ -20,6 +20,7 @@ from app.models.registration_detail import RegistrationDetail
 from app.models.student import Student
 from app.models.subject import Subject
 from app.models.subject_detail import SubjectDetail
+from app.models.teacher_assignment import TeacherAssignment
 from app.schemas.evaluation import (
     AssessmentReportItemResponse,
     EvaluationCreate,
@@ -30,6 +31,7 @@ from app.schemas.evaluation import (
     ScoreEntrySheetResponse,
     ScoreEntryStudentResponse,
     ScoreEntrySummaryResponse,
+    TeacherSubjectRegistrationResponse,
     StudentTranscriptItemResponse,
 )
 
@@ -335,16 +337,33 @@ def _recompute_rankings(db: Session, evaluation_id: str):
         current_rank = 0
         previous_score: Decimal | None = None
 
-        for index, item in enumerate(ranked_entries, start=1):
+        for item in ranked_entries:
             if previous_score is None or item.score != previous_score:
-                current_rank = index
+                current_rank += 1
                 previous_score = item.score
             item.ranking = current_rank
             item.prize = _prize_for_rank(current_rank, item.registration_detail.fee_rel.fee)
 
 
-def _subject_option_query(db: Session, academic_id: str):
-    return db.query(Fee).options(
+def _teacher_subject_detail_ids(
+    db: Session,
+    teacher_id: str,
+    academic_id: str,
+) -> set[str]:
+    """subject_detail_id ທັງໝົດທີ່ອາຈານຄົນນີ້ຖືກມອບໝາຍໃຫ້ສອນໃນສົກຮຽນນີ້."""
+    rows = db.query(TeacherAssignment.subject_detail_id).filter(
+        TeacherAssignment.teacher_id == teacher_id,
+        TeacherAssignment.academic_id == academic_id,
+    ).all()
+    return {row[0] for row in rows}
+
+
+def _subject_option_query(
+    db: Session,
+    academic_id: str,
+    teacher_id: str | None = None,
+):
+    query = db.query(Fee).options(
         joinedload(Fee.subject_detail).joinedload(SubjectDetail.subject),
         joinedload(Fee.subject_detail).joinedload(SubjectDetail.level),
     ).join(
@@ -353,7 +372,19 @@ def _subject_option_query(db: Session, academic_id: str):
         Subject, Subject.subject_id == SubjectDetail.subject_id,
     ).filter(
         Fee.academic_id == academic_id,
-    ).order_by(
+    )
+
+    if teacher_id is not None:
+        subject_detail_ids = _teacher_subject_detail_ids(db, teacher_id, academic_id)
+        if not subject_detail_ids:
+            # ອາຈານທີ່ບໍ່ມີວິຊາສອນ → ບໍ່ສະແດງວິຊາໃດເລີຍ.
+            query = query.filter(False)
+        else:
+            query = query.filter(
+                SubjectDetail.subject_detail_id.in_(subject_detail_ids)
+            )
+
+    return query.order_by(
         Subject.subject_name.asc(),
         Subject.subject_id.asc(),
         SubjectDetail.level_id.asc(),
@@ -361,8 +392,13 @@ def _subject_option_query(db: Session, academic_id: str):
     )
 
 
-def _level_option_query(db: Session, academic_id: str, subject_id: str):
-    return _subject_option_query(db, academic_id).filter(
+def _level_option_query(
+    db: Session,
+    academic_id: str,
+    subject_id: str,
+    teacher_id: str | None = None,
+):
+    return _subject_option_query(db, academic_id, teacher_id).filter(
         SubjectDetail.subject_id == subject_id,
     ).order_by(
         SubjectDetail.level_id.asc(),
@@ -433,10 +469,10 @@ def _build_student_rows(
 
         previous_score: Decimal | None = None
         current_rank = 0
-        for index, (item, score) in enumerate(ranked_rows, start=1):
+        for item, score in ranked_rows:
             row = rows_by_regis_detail_id[item.regis_detail_id]
             if previous_score is None or score != previous_score:
-                current_rank = index
+                current_rank += 1
                 previous_score = score
 
             row.ranking = current_rank
@@ -593,10 +629,13 @@ def get_score_entry_sheet(
 
 def get_score_entry_subjects(
     db: Session,
+    teacher_id: str | None = None,
 ) -> list[ScoreEntrySubjectResponse]:
     academic_year = _get_active_academic_year(db)
     subject_map: dict[str, ScoreEntrySubjectResponse] = {}
-    for item in _subject_option_query(db, academic_year.academic_id).all():
+    for item in _subject_option_query(
+        db, academic_year.academic_id, teacher_id
+    ).all():
         subject = item.subject_detail.subject
         subject_map.setdefault(
             subject.subject_id,
@@ -611,6 +650,7 @@ def get_score_entry_subjects(
 def get_score_entry_levels(
     db: Session,
     subject_id: str,
+    teacher_id: str | None = None,
 ) -> list[ScoreEntryLevelResponse]:
     academic_year = _get_active_academic_year(db)
     return [
@@ -620,8 +660,62 @@ def get_score_entry_levels(
             level_name=item.subject_detail.level.level_name,
             fee_amount=item.fee,
         )
-        for item in _level_option_query(db, academic_year.academic_id, subject_id).all()
+        for item in _level_option_query(
+            db, academic_year.academic_id, subject_id, teacher_id
+        ).all()
     ]
+
+
+def get_teacher_subject_registrations(
+    db: Session,
+    teacher_id: str,
+) -> list[TeacherSubjectRegistrationResponse]:
+    """ວິຊາ/ລະດັບທີ່ອາຈານສອນ ພ້ອມຈຳນວນນັກຮຽນທີ່ລົງທະບຽນແລ້ວ (ສົກຮຽນ ACTIVE)."""
+    academic_year = _get_active_academic_year(db)
+    academic_id = academic_year.academic_id
+
+    assignments = db.query(TeacherAssignment).options(
+        joinedload(TeacherAssignment.subject_detail).joinedload(SubjectDetail.subject),
+        joinedload(TeacherAssignment.subject_detail).joinedload(SubjectDetail.level),
+    ).filter(
+        TeacherAssignment.teacher_id == teacher_id,
+        TeacherAssignment.academic_id == academic_id,
+    ).all()
+
+    if not assignments:
+        return []
+
+    subject_detail_ids = [item.subject_detail_id for item in assignments]
+
+    # ນັບຈຳນວນນັກຮຽນທີ່ລົງທະບຽນຕໍ່ subject_detail_id (ສະເພາະສົກຮຽນ ACTIVE).
+    count_rows = db.query(
+        Fee.subject_detail_id,
+        func.count(RegistrationDetail.regis_detail_id),
+    ).join(
+        RegistrationDetail, RegistrationDetail.fee_id == Fee.fee_id,
+    ).filter(
+        Fee.academic_id == academic_id,
+        Fee.subject_detail_id.in_(subject_detail_ids),
+    ).group_by(
+        Fee.subject_detail_id,
+    ).all()
+    counts = {row[0]: row[1] for row in count_rows}
+
+    results = [
+        TeacherSubjectRegistrationResponse(
+            assignment_id=item.assignment_id,
+            subject_detail_id=item.subject_detail_id,
+            subject_id=item.subject_detail.subject.subject_id,
+            subject_name=item.subject_detail.subject.subject_name,
+            level_id=item.subject_detail.level.level_id,
+            level_name=item.subject_detail.level.level_name,
+            registered_students=counts.get(item.subject_detail_id, 0),
+        )
+        for item in assignments
+    ]
+
+    results.sort(key=lambda row: (row.subject_name, row.level_name))
+    return results
 
 
 def preview_score_entry_sheet(
@@ -750,6 +844,7 @@ def get_assessment_report(
     subject_id: str | None = None,
     level_id: str | None = None,
     ranking: int | None = None,
+    teacher_id: str | None = None,
 ) -> list[AssessmentReportItemResponse]:
     semester_value = semester.strip().lower()
     semester_enum = None if semester_value in {'all', 'all_semesters'} else _parse_semester(semester)
@@ -799,6 +894,16 @@ def get_assessment_report(
         query = query.filter(SubjectDetail.level_id == level_id)
     if ranking:
         query = query.filter(EvaluationDetail.ranking == ranking)
+    if teacher_id:
+        # ອາຈານ: ສະແດງສະເພາະວິຊາ/ລະດັບທີ່ຕົນເອງສອນ (ຕາມ subject_detail_id ທີ່ຖືກມອບໝາຍ).
+        subject_detail_ids = _teacher_subject_detail_ids(
+            db, teacher_id, resolved_academic_id
+        )
+        if not subject_detail_ids:
+            return []
+        query = query.filter(
+            SubjectDetail.subject_detail_id.in_(subject_detail_ids)
+        )
 
     rows = query.join(
         Subject, Subject.subject_id == SubjectDetail.subject_id,

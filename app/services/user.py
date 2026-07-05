@@ -25,7 +25,11 @@ def create(db: Session, data: UserCreate):
         role=data.role
     )
     db.add(obj)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ConflictException("ຊື່ຜູ່ໃຊ້ນີ້ມີຢູ່ແລ້ວ")
     db.refresh(obj)
     return obj
 
@@ -37,11 +41,17 @@ def update(db: Session, user_id: int, data: UserUpdate):
         update_data["user_password"] = hash_password(update_data["user_password"])
     for field, value in update_data.items():
         setattr(obj, field, value)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise ConflictException("ຊື່ຜູ່ໃຊ້ນີ້ມີຢູ່ແລ້ວ")
     db.refresh(obj)
     return obj
 
 
 def delete(db: Session, user_id: int):
     obj = get_by_id(db, user_id)
+    if str(obj.role).upper() == "DIRECTOR":
+        raise ConflictException("ບໍ່ສາມາດລຶບຜູ້ອຳນວຍການໄດ້")
     safe_delete_with_constraint_check(db, obj, "user")

@@ -5,6 +5,7 @@ from app.schemas.donation import DonationCreate, DonationUpdate, DonationRespons
 from app.configs.response import success_response
 from app.services import donation as svc
 from app.services import receipt_pdf as receipt_pdf_svc
+from app.services.donation_certificate_docx import build_donation_certificate_docx
 
 router = APIRouter(prefix="/donations", tags=["ການບໍລິຈາກ"])
 
@@ -33,6 +34,23 @@ def get_donation_certificate_pdf(donation_id: int, db: Session = Depends(get_db)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
+    )
+
+
+@router.get("/{donation_id}/certificate-docx")
+def get_donation_certificate_docx(donation_id: int, db: Session = Depends(get_db)):
+    donation = svc.get_by_id(db, donation_id)
+    docx_bytes = build_donation_certificate_docx(donation)
+    return Response(
+        content=docx_bytes,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ),
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="donation_certificate_{donation_id}.docx"'
+            )
+        },
     )
 
 

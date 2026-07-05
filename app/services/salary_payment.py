@@ -8,8 +8,11 @@ from app.models.salary_payment import SalaryPayment
 from app.models.teaching_log import TeachingLog
 from app.models.teacher_assignment import TeacherAssignment
 from app.models.teacher import Teacher
+from app.models.district import District
 from app.models.expense import Expense
 from app.models.expense_category import ExpenseCategory
+from app.models.academic_years import AcademicYear
+from app.enums.academic_status import AcademicStatusEnum
 from app.schemas.salary_payment import (
     SalaryPaymentCreate,
     SalaryPaymentUpdate,
@@ -82,10 +85,25 @@ def _month_date_range(year: int, month: int):
     return f"{year}-{month:02d}-01", f"{year}-{month:02d}-{last_day:02d}"
 
 
-def _compute_actual_amount(db: Session, teacher_id: str, year: int, month: int):
-    """Actual earned = attended sessions × hourly_rate for the month."""
+def get_active_academic_id(db: Session) -> str | None:
+    active_year = db.query(AcademicYear).filter(
+        AcademicYear.status == AcademicStatusEnum.ACTIVE
+    ).first()
+    return active_year.academic_id if active_year else None
+
+
+def _resolve_academic_id(db: Session, academic_id: str = None, all_years: bool = False) -> str | None:
+    if academic_id is not None or all_years:
+        return academic_id
+    return get_active_academic_id(db)
+
+
+def _compute_actual_amount(
+    db: Session, teacher_id: str, year: int, month: int, academic_id: str = None,
+):
+    """Actual earned = attended sessions × hourly_rate for the month (scoped to one academic year)."""
     from_date, to_date = _month_date_range(year, month)
-    row = db.query(
+    query = db.query(
         func.coalesce(func.sum(TeachingLog.hourly), 0).label('total_hours'),
         func.coalesce(
             func.sum(TeachingLog.hourly * TeacherAssignment.hourly_rate), 0
@@ -98,7 +116,10 @@ def _compute_actual_amount(db: Session, teacher_id: str, year: int, month: int):
         TeachingLog.status.in_(TEACHING_STATUSES),
         func.date(TeachingLog.teaching_date) >= from_date,
         func.date(TeachingLog.teaching_date) <= to_date,
-    ).first()
+    )
+    if academic_id is not None:
+        query = query.filter(TeacherAssignment.academic_id == academic_id)
+    row = query.first()
     return {
         'total_hours': float(row.total_hours or 0),
         'total_amount': float(row.total_amount or 0),
@@ -106,10 +127,12 @@ def _compute_actual_amount(db: Session, teacher_id: str, year: int, month: int):
     }
 
 
-def _compute_planned_amount(db: Session, teacher_id: str, year: int, month: int):
-    """Planned = all scheduled sessions × hourly_rate for the month."""
+def _compute_planned_amount(
+    db: Session, teacher_id: str, year: int, month: int, academic_id: str = None,
+):
+    """Planned = all scheduled sessions × hourly_rate for the month (scoped to one academic year)."""
     from_date, to_date = _month_date_range(year, month)
-    row = db.query(
+    query = db.query(
         func.coalesce(func.sum(TeachingLog.hourly), 0).label('total_hours'),
         func.coalesce(
             func.sum(TeachingLog.hourly * TeacherAssignment.hourly_rate), 0
@@ -121,7 +144,10 @@ def _compute_planned_amount(db: Session, teacher_id: str, year: int, month: int)
         TeachingLog.status.in_(SCHEDULED_STATUSES),
         func.date(TeachingLog.teaching_date) >= from_date,
         func.date(TeachingLog.teaching_date) <= to_date,
-    ).first()
+    )
+    if academic_id is not None:
+        query = query.filter(TeacherAssignment.academic_id == academic_id)
+    row = query.first()
     return {
         'planned_hours': float(row.total_hours or 0),
         'planned_amount': float(row.total_amount or 0),
@@ -140,7 +166,9 @@ def _compute_total_paid(db: Session, teacher_id: str, year: int, month: int) -> 
     return float(row.total_paid or 0)
 
 
-def _compute_prior_debt(db: Session, teacher_id: str, year: int, month: int) -> float:
+def _compute_prior_debt(
+    db: Session, teacher_id: str, year: int, month: int, academic_id: str = None,
+) -> float:
     """Cumulative net balance from all months BEFORE (year, month).
 
     For each prior month: net = actual_earned - total_paid
@@ -160,7 +188,7 @@ def _compute_prior_debt(db: Session, teacher_id: str, year: int, month: int) -> 
 
     cumulative = 0.0
     for row in prior_months:
-        actual = _compute_actual_amount(db, teacher_id, int(row.y), int(row.m))
+        actual = _compute_actual_amount(db, teacher_id, int(row.y), int(row.m), academic_id)
         cumulative += actual['total_amount'] - float(row.total_paid)
 
     return cumulative
@@ -200,8 +228,12 @@ def get_by_teacher(db: Session, teacher_id: str):
     ).order_by(SalaryPayment.payment_date.desc()).all()
 
 
-def get_teaching_months(db: Session, teacher_id: str = None):
+def get_teaching_months(
+    db: Session, teacher_id: str = None, academic_id: str = None, all_years: bool = False,
+):
     """Get distinct (year, month) pairs from teaching_log."""
+    resolved_id = _resolve_academic_id(db, academic_id, all_years)
+
     year_col = extract('year', TeachingLog.teaching_date).label('year')
     month_col = extract('month', TeachingLog.teaching_date).label('month')
 
@@ -211,11 +243,15 @@ def get_teaching_months(db: Session, teacher_id: str = None):
         func.count(TeachingLog.teaching_log_id).label('count'),
     ).filter(TeachingLog.status.in_(TEACHING_STATUSES))
 
-    if teacher_id:
+    if teacher_id or resolved_id is not None:
         query = query.join(
             TeacherAssignment,
             TeachingLog.assignment_id == TeacherAssignment.assignment_id,
-        ).filter(TeacherAssignment.teacher_id == teacher_id)
+        )
+        if teacher_id:
+            query = query.filter(TeacherAssignment.teacher_id == teacher_id)
+        if resolved_id is not None:
+            query = query.filter(TeacherAssignment.academic_id == resolved_id)
 
     results = query.group_by(
         year_col, month_col
@@ -236,24 +272,36 @@ def get_teaching_months(db: Session, teacher_id: str = None):
     ]
 
 
-def calculate_teacher_salary(db: Session, teacher_id: str, year: int, month: int):
-    actual = _compute_actual_amount(db, teacher_id, year, month)
-    planned = _compute_planned_amount(db, teacher_id, year, month)
+def calculate_teacher_salary(
+    db: Session, teacher_id: str, year: int, month: int, academic_id: str = None,
+):
+    resolved_id = _resolve_academic_id(db, academic_id)
+    actual = _compute_actual_amount(db, teacher_id, year, month, resolved_id)
+    planned = _compute_planned_amount(db, teacher_id, year, month, resolved_id)
     total_paid = _compute_total_paid(db, teacher_id, year, month)
-    prior_debt = _compute_prior_debt(db, teacher_id, year, month)
+    prior_debt = _compute_prior_debt(db, teacher_id, year, month, resolved_id)
 
     remaining = actual['total_amount'] + prior_debt - total_paid
 
-    teacher = db.query(Teacher).filter(Teacher.teacher_id == teacher_id).first()
-    assignment = db.query(TeacherAssignment).filter(
+    teacher = db.query(Teacher).options(
+        joinedload(Teacher.district).joinedload(District.province)
+    ).filter(Teacher.teacher_id == teacher_id).first()
+    district = getattr(teacher, 'district', None) if teacher else None
+    province = getattr(district, 'province', None) if district else None
+    assignment_query = db.query(TeacherAssignment).filter(
         TeacherAssignment.teacher_id == teacher_id
-    ).first()
+    )
+    if resolved_id is not None:
+        assignment_query = assignment_query.filter(TeacherAssignment.academic_id == resolved_id)
+    assignment = assignment_query.first()
     hourly_rate = float(assignment.hourly_rate) if assignment else 0.0
 
     return {
         'teacher_id': teacher_id,
         'teacher_name': teacher.teacher_name if teacher else '',
         'teacher_lastname': teacher.teacher_lastname if teacher else '',
+        'province_name': province.province_name if province else None,
+        'district_name': district.district_name if district else None,
         'year': year,
         'month': month,
         'total_hours': actual['total_hours'],
@@ -268,27 +316,35 @@ def calculate_teacher_salary(db: Session, teacher_id: str, year: int, month: int
     }
 
 
-def get_monthly_teachers_summary(db: Session, year: int, month: int):
+def get_monthly_teachers_summary(
+    db: Session, year: int, month: int, academic_id: str = None, all_years: bool = False,
+):
     """All teachers that have any teaching log in year/month, with their salary summary."""
+    resolved_id = _resolve_academic_id(db, academic_id, all_years)
     from_date, to_date = _month_date_range(year, month)
 
-    teacher_ids_q = db.query(TeacherAssignment.teacher_id).join(
+    query = db.query(TeacherAssignment.teacher_id).join(
         TeachingLog, TeachingLog.assignment_id == TeacherAssignment.assignment_id
     ).filter(
         TeachingLog.status.in_(SCHEDULED_STATUSES),
         func.date(TeachingLog.teaching_date) >= from_date,
         func.date(TeachingLog.teaching_date) <= to_date,
-    ).distinct().all()
+    )
+    if resolved_id is not None:
+        query = query.filter(TeacherAssignment.academic_id == resolved_id)
+    teacher_ids_q = query.distinct().all()
 
     return [
-        calculate_teacher_salary(db, row.teacher_id, year, month)
+        calculate_teacher_salary(db, row.teacher_id, year, month, resolved_id)
         for row in teacher_ids_q
     ]
 
 
-def get_payment_summary_by_teacher(db: Session, teacher_id: str, year: int, month: int):
+def get_payment_summary_by_teacher(
+    db: Session, teacher_id: str, year: int, month: int, academic_id: str = None,
+):
     """Payment summary for a teacher in a specific month."""
-    data = calculate_teacher_salary(db, teacher_id, year, month)
+    data = calculate_teacher_salary(db, teacher_id, year, month, academic_id)
     return {
         'teacher_id': teacher_id,
         'year': year,

@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
 from app.models.teacher_assignment import TeacherAssignment
 from app.models.subject_detail import SubjectDetail
+from app.models.academic_years import AcademicYear
+from app.enums.academic_status import AcademicStatusEnum
 from app.schemas.teacher_assignment import (
     TeacherAssignmentBatchCreate,
     TeacherAssignmentCreate,
@@ -55,14 +57,36 @@ def _query_with_relations(db: Session):
     )
 
 
-def get_all(db: Session):
-    return _query_with_relations(db).all()
+def _resolve_academic_id(db: Session, academic_id: str = None, all_years: bool = False) -> str | None:
+    if academic_id is not None or all_years:
+        return academic_id
+    active_year = db.query(AcademicYear).filter(
+        AcademicYear.status == AcademicStatusEnum.ACTIVE
+    ).first()
+    return active_year.academic_id if active_year else None
 
 
-def get_by_teacher(db: Session, teacher_id: str):
-    return _query_with_relations(db).filter(
+def get_all(db: Session, academic_id: str = None, all_years: bool = False):
+    """
+    - academic_id: ສະເພາະສົກຮຽນທີ່ລະບຸ.
+    - all_years=True: ທຸກສົກຮຽນ (ບໍ່ filter).
+    - ບໍ່ລະບຸທັງສອງ: default = ສົກທີ່ ACTIVE.
+    """
+    resolved_id = _resolve_academic_id(db, academic_id, all_years)
+    query = _query_with_relations(db)
+    if resolved_id is not None:
+        query = query.filter(TeacherAssignment.academic_id == resolved_id)
+    return query.all()
+
+
+def get_by_teacher(db: Session, teacher_id: str, academic_id: str = None, all_years: bool = False):
+    resolved_id = _resolve_academic_id(db, academic_id, all_years)
+    query = _query_with_relations(db).filter(
         TeacherAssignment.teacher_id == teacher_id
-    ).all()
+    )
+    if resolved_id is not None:
+        query = query.filter(TeacherAssignment.academic_id == resolved_id)
+    return query.all()
 
 
 def get_by_id(db: Session, assignment_id: str):

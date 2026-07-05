@@ -32,10 +32,58 @@ class RegistrationBulkCreate(BaseModel):
     details: List[RegistrationDetailItem]
 
 
+class RegistrationPreviewRequest(BaseModel):
+    """Request a discount/amount preview before saving."""
+    student_id: str
+    registration_date: Optional[datetime] = None
+    details: List[RegistrationDetailItem]
+
+
+class RegistrationPreviewResponse(BaseModel):
+    """Computed amounts returned by the backend (source of truth)."""
+    total_amount: Decimal
+    discount_amount: Decimal
+    final_amount: Decimal
+    discount_id: Optional[str] = None
+    discount_description: Optional[str] = None
+
+
+class StudentRegistrationDetailItem(BaseModel):
+    """A single subject row of an existing registration (for editing UI)."""
+    regis_detail_id: int
+    fee_id: str
+    subject_name: str
+    level_name: str
+    scholarship: str
+    fee: Decimal
+
+
+class StudentRegistrationResponse(BaseModel):
+    """A student's existing registration for an academic year, with its subjects."""
+    registration_id: str
+    student_id: str
+    academic_id: Optional[str] = None
+    academic_year: Optional[str] = None
+    discount_id: Optional[str] = None
+    discount_description: Optional[str] = None
+    total_amount: Decimal
+    final_amount: Decimal
+    paid_amount: Decimal
+    status: RegistrationStatusEnum
+    registration_date: datetime
+    is_locked: bool  # ຈ່າຍແລ້ວ → ແກ້ໄຂ/ລຶບວິຊາເກົ່າບໍ່ໄດ້ (ແຕ່ເພີ່ມວິຊາໃໝ່ໄດ້)
+    details: List[StudentRegistrationDetailItem]
+
+    @field_serializer('registration_date')
+    def serialize_registration_date(self, value):
+        return format_date(value)
+
+
 class RegistrationReceiptFeeItem(BaseModel):
     subject_name: str
     level_name: str
     fee: Decimal
+    is_scholarship: bool = False
 
 
 class RegistrationReceiptRequest(BaseModel):
@@ -70,6 +118,8 @@ class RegistrationResponse(BaseModel):
     registration_id: str
     student_name: str
     student_lastname: str
+    province_name: Optional[str] = None
+    district_name: Optional[str] = None
     academic_id: Optional[str] = None
     academic_year: Optional[str] = None
     discount_description: Optional[str]
@@ -104,10 +154,15 @@ class RegistrationResponse(BaseModel):
                 academic_id = discount_year.academic_id
                 academic_year = discount_year.academic_year
 
+        district = getattr(obj.student, 'district', None) if obj.student else None
+        province = getattr(district, 'province', None) if district else None
+
         return cls(
             registration_id=obj.registration_id,
             student_name=obj.student.student_name,
             student_lastname=obj.student.student_lastname,
+            province_name=province.province_name if province else None,
+            district_name=district.district_name if district else None,
             academic_id=academic_id,
             academic_year=academic_year,
             discount_description=obj.discount.discount_description if obj.discount else None,

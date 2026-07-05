@@ -173,7 +173,6 @@ def export_student_report(
         "ໂຮງຮຽນ",
         "ແຂວງ",
         "ເມືອງ",
-        "ສະຖານະທຶນ",
     ]
 
     if normalized_format == "csv":
@@ -192,7 +191,6 @@ def export_student_report(
                     student["school"],
                     student["province_name"] or "",
                     student["district_name"] or "",
-                    student["scholarship_status"] or "-",
                 ]
             )
 
@@ -225,18 +223,16 @@ def export_student_report(
         sheet,
         rows=[
             ("ວັນທີສ້າງ", format_report_datetime()),
-            ("ສົກຮຽນ", report_data["filters"].get("academic_year_name") or "ທັງໝົດ"),
             ("ແຂວງ", report_data["filters"].get("province_name") or "ທັງໝົດ"),
             ("ເມືອງ", report_data["filters"].get("district_name") or "ທັງໝົດ"),
             ("ເພດ", report_data["filters"].get("gender") or "ທັງໝົດ"),
-            ("ສະຖານະທຶນ", report_data["filters"].get("scholarship") or "ທັງໝົດ"),
             ("ຈຳນວນນັກຮຽນ", report_data["total_count"]),
         ],
         start_row=3,
         theme=theme,
     )
 
-    header_row = 12
+    header_row = 11
     write_excel_table_headers(sheet, headers=headers, row_index=header_row, theme=theme)
     write_excel_table_rows(
         sheet,
@@ -251,7 +247,6 @@ def export_student_report(
                 student["school"],
                 student["province_name"] or "-",
                 student["district_name"] or "-",
-                student["scholarship_status"] or "-",
             ]
             for student in students
         ],
@@ -260,7 +255,7 @@ def export_student_report(
     )
 
     sheet.freeze_panes = f"A{header_row + 1}"
-    sheet.auto_filter.ref = f"A{header_row}:K{max(header_row, header_row + len(students))}"
+    sheet.auto_filter.ref = f"A{header_row}:I{max(header_row, header_row + len(students))}"
     set_excel_column_widths(
         sheet,
         {
@@ -273,7 +268,6 @@ def export_student_report(
             7: 24,
             8: 16,
             9: 16,
-            10: 18,
         },
     )
 

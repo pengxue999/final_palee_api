@@ -19,6 +19,9 @@ from app.services.pdf.contexts.popular_subjects_report import (
     build_popular_subjects_report_context,
 )
 from app.services.pdf.contexts.registration import build_registration_context
+from app.services.pdf.contexts.registration_report import (
+    build_registration_report_context,
+)
 from app.services.pdf.contexts.salary_payment import build_salary_payment_context
 from app.services.pdf.contexts.salary_payment_report import (
     build_salary_payment_report_context,
@@ -136,6 +139,18 @@ def build_salary_payment_report_pdf(report_data: dict[str, object]) -> bytes:
 
 def build_student_report_pdf(report_data: dict[str, object]) -> bytes:
     html = render_template("student_report.html", build_student_report_context(report_data))
+    return render_pdf_document(
+        html,
+        viewport_width=1754,
+        viewport_height=1240,
+    )
+
+
+def build_registration_report_pdf(report_data: dict[str, object]) -> bytes:
+    html = render_template(
+        "registration_report.html",
+        build_registration_report_context(report_data),
+    )
     return render_pdf_document(
         html,
         viewport_width=1754,

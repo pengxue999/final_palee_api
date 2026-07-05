@@ -187,6 +187,16 @@ class ScoreEntrySummaryResponse(BaseModel):
     average_score: Optional[Decimal] = None
 
 
+class TeacherSubjectRegistrationResponse(BaseModel):
+    assignment_id: str
+    subject_detail_id: str
+    subject_id: str
+    subject_name: str
+    level_id: str
+    level_name: str
+    registered_students: int
+
+
 class ScoreEntrySheetResponse(BaseModel):
     academic_id: Optional[str] = None
     academic_year: Optional[str] = None
