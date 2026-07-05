@@ -26,6 +26,26 @@ def _generate_teacher_id(db: Session) -> str:
         num = int(last_id[2:]) + 1
         return f"TC{num:03d}"
     return "TC001"
+
+
+def _check_duplicate_name(
+    db: Session,
+    teacher_name: str,
+    teacher_lastname: str,
+    exclude_id: str | None = None,
+):
+    query = db.query(Teacher).filter(
+        Teacher.teacher_name == teacher_name,
+        Teacher.teacher_lastname == teacher_lastname,
+    )
+    if exclude_id is not None:
+        query = query.filter(Teacher.teacher_id != exclude_id)
+    if query.first():
+        raise ConflictException(
+            f"ອາຈານຊື່ '{teacher_name} {teacher_lastname}' ມີຢູ່ແລ້ວ"
+        )
+
+
 def get_all_teachers(db: Session):
     return db.query(Teacher).all()
 
@@ -38,6 +58,7 @@ def get_teacher(db: Session, teacher_id: str) -> Teacher:
 
 
 def create_teacher(db: Session, data: TeacherCreate):
+    _check_duplicate_name(db, data.teacher_name, data.teacher_lastname)
     teacher_id= _generate_teacher_id(db)
     obj = Teacher(teacher_id=teacher_id, **data.model_dump())
     db.add(obj)
@@ -52,6 +73,13 @@ def create_teacher(db: Session, data: TeacherCreate):
 
 def update_teacher(db: Session, teacher_id: str, data: TeacherUpdate):
     obj = get_teacher(db, teacher_id)
+    if data.teacher_name is not None or data.teacher_lastname is not None:
+        _check_duplicate_name(
+            db,
+            data.teacher_name if data.teacher_name is not None else obj.teacher_name,
+            data.teacher_lastname if data.teacher_lastname is not None else obj.teacher_lastname,
+            exclude_id=teacher_id,
+        )
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(obj, field, value)
     try:

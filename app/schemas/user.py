@@ -31,3 +31,5 @@ class TokenResponse(BaseModel):
     user_name: str
     role: str
     teacher_id: Optional[str] = None
+    has_teacher_info: bool = False
+    has_teaching_info: bool = False

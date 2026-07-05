@@ -14,8 +14,12 @@ router = APIRouter(prefix="/teacher-assignments", tags=["ການມອບໝ�
 
 
 @router.get("")
-def get_all(db: Session = Depends(get_db)):
-    data = svc.get_all(db)
+def get_all(
+    academic_id: str | None = None,
+    all_years: bool = False,
+    db: Session = Depends(get_db),
+):
+    data = svc.get_all(db, academic_id=academic_id, all_years=all_years)
     return success_response(
         [TeacherAssignmentResponse.model_validate(item) for item in data],
         "ດຶງຂໍ້ມູນການມອບໝາຍອາຈານທັງໝົດສຳເລັດ"
@@ -23,8 +27,13 @@ def get_all(db: Session = Depends(get_db)):
 
 
 @router.get("/by-teacher/{teacher_id}")
-def get_by_teacher(teacher_id: str, db: Session = Depends(get_db)):
-    data = svc.get_by_teacher(db, teacher_id)
+def get_by_teacher(
+    teacher_id: str,
+    academic_id: str | None = None,
+    all_years: bool = False,
+    db: Session = Depends(get_db),
+):
+    data = svc.get_by_teacher(db, teacher_id, academic_id=academic_id, all_years=all_years)
     return success_response(
         [TeacherAssignmentResponse.model_validate(item) for item in data],
         "ດຶງຂໍ້ມູນການມອບໝາຍອາຈານສຳເລັດ"

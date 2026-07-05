@@ -21,7 +21,8 @@ class DiscountResponse(BaseModel):
 
     @classmethod
     def model_validate(cls, obj):
-        desc_val = str(obj.discount_description)
+        desc = obj.discount_description
+        desc_val = desc.value if hasattr(desc, "value") else str(desc)
         return cls(
             discount_id=obj.discount_id,
             discount_amount=obj.discount_amount,

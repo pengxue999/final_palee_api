@@ -28,10 +28,11 @@ def get_score_entry_sheet(
 
 @router.get("/score-entry/subjects")
 def get_score_entry_subjects(
+    teacher_id: str | None = Query(None, description="ລະຫັດອາຈານ: ສະແດງສະເພາະວິຊາທີ່ສອນ (optional)"),
     db: Session = Depends(get_db),
 ):
     return success_response(
-        svc.get_score_entry_subjects(db),
+        svc.get_score_entry_subjects(db, teacher_id=teacher_id),
         "ດຶງລາຍການວິຊາສຳລັບປ້ອນຄະແນນສຳເລັດ",
     )
 
@@ -39,11 +40,23 @@ def get_score_entry_subjects(
 @router.get("/score-entry/levels")
 def get_score_entry_levels(
     subject_id: str = Query(...),
+    teacher_id: str | None = Query(None, description="ລະຫັດອາຈານ: ສະແດງສະເພາະລະດັບທີ່ສອນ (optional)"),
     db: Session = Depends(get_db),
 ):
     return success_response(
-        svc.get_score_entry_levels(db, subject_id),
+        svc.get_score_entry_levels(db, subject_id, teacher_id=teacher_id),
         "ດຶງລາຍການລະດັບສຳລັບປ້ອນຄະແນນສຳເລັດ",
+    )
+
+
+@router.get("/score-entry/teacher-subjects")
+def get_teacher_subject_registrations(
+    teacher_id: str = Query(..., description="ລະຫັດອາຈານ"),
+    db: Session = Depends(get_db),
+):
+    return success_response(
+        svc.get_teacher_subject_registrations(db, teacher_id),
+        "ດຶງລາຍການວິຊາທີ່ສອນ ພ້ອມຈຳນວນນັກຮຽນທີ່ລົງທະບຽນສຳເລັດ",
     )
 
 

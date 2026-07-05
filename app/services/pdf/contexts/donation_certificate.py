@@ -33,6 +33,7 @@ def build_donation_certificate_context(donation: Donation) -> dict[str, object]:
         "font_regular_url": regular_font_url,
         "font_bold_url": bold_font_url,
         "logo_url": image_data_url("logo.png"),
+        "border_url": image_data_url("edage.png"),
         "certificate_title": "ໃບກຽດຕິຄຸນ",
         "organization_name": "ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ",
         "organization_caption": "ຜູ້ອຳນວຍການ ສູນປາລີ ບຳລຸງນັກຮຽນເກັ່ງ",
